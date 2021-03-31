@@ -2,6 +2,8 @@ package main
 
 import (
 	"bufio"
+	"flag"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -22,14 +24,17 @@ func main() {
 }
 
 func run() {
-	re := true
-	client = getClient(&re)
+	redirect := flag.Bool("no-redirect", false, "Don't follow HTTP redirections (by default httpsc will follow redirections)")
+	inputs := flag.String("inputs", "", "File with URLs to scan (by default is stdin)")
+	flag.Parse()
 
-	file := openFile("debug/githubapp.com.txt")
-	defer file.Close()
+	client = getClient(redirect)
+	reader := openStdinOrFile(inputs)
+	defer reader.Close()
 
 	wg := &sync.WaitGroup{}
-	scanner := bufio.NewScanner(file)
+	scanner := bufio.NewScanner(reader)
+
 	for scanner.Scan() {
 		urls := prepareUrlsWithSchema(scanner.Text())
 		for _, url := range urls {
@@ -132,10 +137,20 @@ func prepareUrlsWithSchema(url string) []string {
 	return result
 }
 
+func openStdinOrFile(inputs *string) io.ReadCloser {
+	r := os.Stdin
+
+	if *inputs != "" {
+		r = openFile(*inputs)
+	}
+
+	return r
+}
+
 func openFile(filepath string) *os.File {
 	file, err := os.Open(filepath)
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 
 	return file

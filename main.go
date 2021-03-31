@@ -7,42 +7,41 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
-
-	"github.com/gammazero/workerpool"
 )
 
 var client *http.Client
 
-var withoutRedirect = func(req *http.Request, via []*http.Request) error {
+var noRedirect = func(req *http.Request, via []*http.Request) error {
 	return http.ErrUseLastResponse
 }
 
-func init() {
-	client = &http.Client{
-		CheckRedirect: withoutRedirect,
-		Timeout:       15 * time.Second,
-	}
+func main() {
+	run()
 }
 
-func main() {
+func run() {
+	re := true
+	client = getClient(&re)
+
 	file := openFile("debug/githubapp.com.txt")
 	defer file.Close()
 
-	wp := workerpool.New(4)
-
+	wg := &sync.WaitGroup{}
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		urls := prepareUrlsWithSchema(scanner.Text())
 		for _, url := range urls {
 			u := url
-			wp.Submit(func() {
+			wg.Add(1)
+			go func(u string) {
+				defer wg.Done()
 				whatStatus(u)
-			})
+			}(u)
 		}
 	}
-
-	wp.StopWait()
+	wg.Wait()
 }
 
 func whatStatus(url string) {
@@ -76,6 +75,18 @@ func checkStatus(url string) (string, int, error) {
 	return resp.Request.URL.String(), resp.StatusCode, nil
 }
 
+func getClient(re *bool) *http.Client {
+	client = &http.Client{
+		Timeout: 15 * time.Second,
+	}
+
+	if *re {
+		client.CheckRedirect = noRedirect
+	}
+
+	return client
+}
+
 func printResult(url string, status int) {
 	s := strconv.Itoa(status)
 
@@ -103,6 +114,8 @@ func printResult(url string, status int) {
 		log.Printf("[ %s %s ] %s \n", Red(s), Red(description), url)
 		return
 	}
+
+	log.Printf("[ %s ] %s \n", Gray(s), url)
 }
 
 func prepareUrlsWithSchema(url string) []string {

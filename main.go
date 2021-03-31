@@ -2,10 +2,10 @@ package main
 
 import (
 	"bufio"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -51,7 +51,7 @@ func whatStatus(url string) {
 		return
 	}
 
-	fmt.Println(reqURL, reqStatusCode)
+	printResult(reqURL, reqStatusCode)
 }
 
 // func filterStatus(status int) bool {
@@ -74,6 +74,35 @@ func checkStatus(url string) (string, int, error) {
 	defer resp.Body.Close()
 
 	return resp.Request.URL.String(), resp.StatusCode, nil
+}
+
+func printResult(url string, status int) {
+	s := strconv.Itoa(status)
+
+	if description, ok := StatusInformational[status]; ok {
+		log.Printf("[ %s %s ] %s \n", Blue(s), Blue(description), url)
+		return
+	}
+
+	if description, ok := StatusSuccess[status]; ok {
+		log.Printf("[ %s %s ] %s \n", Green(s), Green(description), url)
+		return
+	}
+
+	if description, ok := StatusRedirection[status]; ok {
+		log.Printf("[ %s %s ] %s \n", Yellow(s), Yellow(description), url)
+		return
+	}
+
+	if description, ok := StatusClientError[status]; ok {
+		log.Printf("[ %s %s ] %s \n", Red(s), Red(description), url)
+		return
+	}
+
+	if description, ok := StatusServerError[status]; ok {
+		log.Printf("[ %s %s ] %s \n", Red(s), Red(description), url)
+		return
+	}
 }
 
 func prepareUrlsWithSchema(url string) []string {

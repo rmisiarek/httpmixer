@@ -9,17 +9,20 @@ import (
 )
 
 type HttpMixerOptions struct {
-	source    *string
-	redirect  *bool
-	testHttp  bool
-	testHttps bool
+	source      *string
+	concurrency *int
+	timeout     *int
+	redirect    *bool
+	testHttp    *bool
+	testHttps   *bool
+	testTrace   *bool
 }
 
 type HttpMixerResult struct {
 	statusCode int
 	location   string
 	url        string
-	trace      bool
+	// trace      bool
 }
 
 type HttpMixer struct {
@@ -31,7 +34,7 @@ type HttpMixer struct {
 func NewHttpMixer(opts *HttpMixerOptions) *HttpMixer {
 	return &HttpMixer{
 		source:  openStdinOrFile(opts.source),
-		client:  getClient(opts.redirect),
+		client:  getClient(opts.redirect, opts.timeout),
 		options: opts,
 	}
 }
@@ -44,7 +47,7 @@ func (h *HttpMixer) Start(f resultF) {
 	outWG := &sync.WaitGroup{}
 	feedWG := &sync.WaitGroup{}
 
-	for i := 0; i < 20; i++ {
+	for i := 0; i < *h.options.concurrency; i++ {
 		feedWG.Add(1)
 		go func() {
 			for url := range feedChannel {
@@ -91,7 +94,7 @@ func (h *HttpMixer) feed(feedChannel chan string) {
 func (h *HttpMixer) urlsWthProtocols(url string) []string {
 	result := []string{}
 
-	if h.options.testHttp {
+	if *h.options.testHttp {
 		if !strings.HasPrefix(url, "http") {
 			result = append(result, "http://"+url)
 		} else {
@@ -99,7 +102,7 @@ func (h *HttpMixer) urlsWthProtocols(url string) []string {
 		}
 	}
 
-	if h.options.testHttps {
+	if *h.options.testHttps {
 		if !strings.HasPrefix(url, "https") {
 			result = append(result, "https://"+url)
 		} else {

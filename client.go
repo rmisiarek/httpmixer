@@ -13,12 +13,12 @@ var noRedirect = func(req *http.Request, via []*http.Request) error {
 	return http.ErrUseLastResponse
 }
 
-func getClient(re *bool) *HttpClient {
+func getClient(redirect *bool, timeout *int) *HttpClient {
 	client := &http.Client{
-		Timeout: 15 * time.Second,
+		Timeout: time.Duration(*timeout) * time.Second,
 	}
 
-	if *re {
+	if !*redirect {
 		client.CheckRedirect = noRedirect
 	}
 

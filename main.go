@@ -1,15 +1,11 @@
 package main
 
 import (
-	"bufio"
-	"flag"
-	"io"
+	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 )
 
@@ -20,33 +16,22 @@ var noRedirect = func(req *http.Request, via []*http.Request) error {
 }
 
 func main() {
-	run()
-}
+	source := "debug/google.txt"
+	redirect := true
 
-func run() {
-	redirect := flag.Bool("no-redirect", false, "Don't follow HTTP redirections (by default httpsc will follow redirections)")
-	inputs := flag.String("inputs", "", "File with URLs to scan (by default is stdin)")
-	flag.Parse()
-
-	client = getClient(redirect)
-	reader := openStdinOrFile(inputs)
-	defer reader.Close()
-
-	wg := &sync.WaitGroup{}
-	scanner := bufio.NewScanner(reader)
-
-	for scanner.Scan() {
-		urls := prepareUrlsWithSchema(scanner.Text())
-		for _, url := range urls {
-			u := url
-			wg.Add(1)
-			go func(u string) {
-				defer wg.Done()
-				whatStatus(u)
-			}(u)
-		}
+	o := &HttpMixerOpts{
+		source:    &source,
+		redirect:  &redirect,
+		testHttp:  true,
+		testHttps: true,
 	}
-	wg.Wait()
+
+	f := func(o *HttpMixerRes) {
+		fmt.Println(o)
+	}
+
+	mixer := NewHttpMixer(o)
+	mixer.Start(f)
 }
 
 func whatStatus(url string) {
@@ -57,10 +42,6 @@ func whatStatus(url string) {
 
 	printResult(reqURL, reqStatusCode)
 }
-
-// func filterStatus(status int) bool {
-// 	return true
-// }
 
 func checkStatus(url string) (string, int, error) {
 	req, err := http.NewRequest("GET", url, nil)
@@ -135,23 +116,4 @@ func prepareUrlsWithSchema(url string) []string {
 	}
 
 	return result
-}
-
-func openStdinOrFile(inputs *string) io.ReadCloser {
-	r := os.Stdin
-
-	if *inputs != "" {
-		r = openFile(*inputs)
-	}
-
-	return r
-}
-
-func openFile(filepath string) *os.File {
-	file, err := os.Open(filepath)
-	if err != nil {
-		panic(err)
-	}
-
-	return file
 }

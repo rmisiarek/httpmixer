@@ -22,9 +22,7 @@ func getClient(redirect *bool, timeout *int) *HttpClient {
 		client.CheckRedirect = noRedirect
 	}
 
-	a := &HttpClient{client: client}
-
-	return a
+	return &HttpClient{client: client}
 }
 
 func (h *HttpClient) request(url *string, method string) (*HttpMixerResult, error) {

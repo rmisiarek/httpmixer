@@ -5,7 +5,7 @@ import (
 	"runtime"
 )
 
-var (
+const (
 	reset  = "\033[0m"
 	red    = "\033[31m"
 	green  = "\033[32m"
@@ -46,19 +46,13 @@ func Gray(txt string) string {
 }
 
 func White(txt string) string {
-	return fmt.Sprintf("%v%v%v", white, txt, reset)
+	return _color(txt, white, runtime.GOOS)
 }
 
-func init() {
-	if runtime.GOOS == "windows" {
-		reset = ""
-		red = ""
-		green = ""
-		yellow = ""
-		blue = ""
-		purple = ""
-		cyan = ""
-		gray = ""
-		white = ""
+func _color(txt, color, platform string) string {
+	if platform == "linux" {
+		return fmt.Sprintf("%v%v%v", color, txt, reset)
+	} else {
+		return txt
 	}
 }

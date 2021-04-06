@@ -26,7 +26,7 @@ type HttpMixerResult struct {
 }
 
 type HttpMixer struct {
-	source  io.Reader
+	source  io.ReadCloser
 	client  *HttpClient
 	options *HttpMixerOptions
 }

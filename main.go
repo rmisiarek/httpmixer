@@ -8,10 +8,10 @@ import (
 func main() {
 	source := flag.String("source", "", "Path to file with URL's to test (default: stdin)")
 	concurrency := flag.Int("concurrency", 100, "Concurrency level (default: 100)")
-	timeout := flag.Int("timeout", 15, "Timeout in seconds (default: 15)")
+	timeout := flag.Int("timeout", 20, "Timeout in seconds (default: 15)")
 	redirect := flag.Bool("redirect", true, "Follow redirections? (default: true)")
-	testHttp := flag.Bool("test-http", true, "Test HTTP protocol? (default: true)")
-	testHttps := flag.Bool("test-https", true, "Test HTTPS protocol? (default: true)")
+	skipHttp := flag.Bool("skip-http", false, "Skip testing HTTP protocol (default: false)")
+	skipHttps := flag.Bool("skip-https", false, "Skip testing HTTPS protocol (default: false)")
 	testTrace := flag.Bool("test-trace", false, "Test TRACE method? (default: false)")
 
 	flag.Parse()
@@ -21,8 +21,8 @@ func main() {
 		concurrency: concurrency,
 		redirect:    redirect,
 		timeout:     timeout,
-		testHttp:    testHttp,
-		testHttps:   testHttps,
+		skipHttp:    skipHttp,
+		skipHttps:   skipHttps,
 		testTrace:   testTrace,
 	}
 

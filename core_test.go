@@ -28,8 +28,8 @@ func TestNewHttpMixerStdinSource(t *testing.T) {
 	assert.Equal(t, 2, *mixer.options.concurrency)
 	assert.Equal(t, 5, *mixer.options.timeout)
 	assert.Equal(t, false, *mixer.options.redirect)
-	assert.Equal(t, true, *mixer.options.testHttp)
-	assert.Equal(t, true, *mixer.options.testHttps)
+	assert.Equal(t, true, *mixer.options.skipHttp)
+	assert.Equal(t, true, *mixer.options.skipHttps)
 	assert.Equal(t, true, *mixer.options.testTrace)
 }
 
@@ -74,8 +74,8 @@ func mixerOptions() HttpMixerOptions {
 	concurrency := 2
 	timeout := 5
 	redirect := false
-	testHttp := true
-	testHttps := true
+	skipHttp := true
+	skipHttps := true
 	testTrace := true
 
 	opts := HttpMixerOptions{
@@ -83,8 +83,8 @@ func mixerOptions() HttpMixerOptions {
 		concurrency: &concurrency,
 		timeout:     &timeout,
 		redirect:    &redirect,
-		testHttp:    &testHttp,
-		testHttps:   &testHttps,
+		skipHttp:    &skipHttp,
+		skipHttps:   &skipHttps,
 		testTrace:   &testTrace,
 	}
 

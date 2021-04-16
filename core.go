@@ -2,27 +2,33 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"os"
 	"strings"
 	"sync"
 )
 
+type feedData struct {
+	method string
+	url    string
+}
+
 type HttpMixerOptions struct {
 	source      *string
 	concurrency *int
 	timeout     *int
 	redirect    *bool
-	testHttp    *bool
-	testHttps   *bool
+	skipHttp    *bool
+	skipHttps   *bool
 	testTrace   *bool
 }
 
 type HttpMixerResult struct {
 	statusCode int
-	location   string
 	url        string
-	// trace      bool
+	method     string
+	location   string
 }
 
 type HttpMixer struct {
@@ -43,24 +49,32 @@ type resultF func(result *HttpMixerResult)
 
 func (h *HttpMixer) Start(f resultF) {
 	outChannel := make(chan *HttpMixerResult)
-	feedChannel := make(chan string)
+	feedChannel := make(chan *feedData)
 	outWG := &sync.WaitGroup{}
 	feedWG := &sync.WaitGroup{}
 
 	for i := 0; i < *h.options.concurrency; i++ {
 		feedWG.Add(1)
 		go func() {
-			for url := range feedChannel {
-				result, err := h.client.request(&url, "GET")
+			for feed := range feedChannel {
+				result, err := h.client.request(&feed.url, feed.method)
 				if err != nil {
+					fmt.Println(err.Error())
 					continue
 				}
 
+				result.method = feed.method
 				outChannel <- result
 			}
+
 			feedWG.Done()
 		}()
 	}
+
+	go func() {
+		feedWG.Wait()
+		close(outChannel)
+	}()
 
 	outWG.Add(1)
 	go func() {
@@ -70,23 +84,27 @@ func (h *HttpMixer) Start(f resultF) {
 		}
 	}()
 
-	go func() {
-		feedWG.Wait()
-		close(outChannel)
-	}()
-
 	h.feed(feedChannel)
 
 	close(feedChannel)
 	outWG.Wait()
 }
 
-func (h *HttpMixer) feed(feedChannel chan string) {
+func (h *HttpMixer) feed(feedChannel chan *feedData) {
 	scanner := bufio.NewScanner(h.source)
 	for scanner.Scan() {
 		urls := h.urlsWthProtocols(scanner.Text())
 		for _, url := range urls {
-			feedChannel <- url
+			feedChannel <- &feedData{
+				method: "GET",
+				url:    url,
+			}
+			if *h.options.testTrace {
+				feedChannel <- &feedData{
+					method: "TRACE",
+					url:    url,
+				}
+			}
 		}
 	}
 }
@@ -94,7 +112,7 @@ func (h *HttpMixer) feed(feedChannel chan string) {
 func (h *HttpMixer) urlsWthProtocols(url string) []string {
 	result := []string{}
 
-	if *h.options.testHttp {
+	if !*h.options.skipHttp {
 		if !strings.HasPrefix(url, "http") {
 			result = append(result, "http://"+url)
 		} else {
@@ -102,7 +120,7 @@ func (h *HttpMixer) urlsWthProtocols(url string) []string {
 		}
 	}
 
-	if *h.options.testHttps {
+	if !*h.options.skipHttps {
 		if !strings.HasPrefix(url, "https") {
 			result = append(result, "https://"+url)
 		} else {

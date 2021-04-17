@@ -14,14 +14,23 @@ type feedData struct {
 	url    string
 }
 
+type statusFilter struct {
+	showAll       *bool
+	onlyInfo      *bool
+	onlySuccess   *bool
+	onlyClientErr *bool
+	onlyServerErr *bool
+}
+
 type HttpMixerOptions struct {
-	source      *string
-	concurrency *int
-	timeout     *int
-	redirect    *bool
-	skipHttp    *bool
-	skipHttps   *bool
-	testTrace   *bool
+	source       *string
+	concurrency  *int
+	timeout      *int
+	redirect     *bool
+	skipHttp     *bool
+	skipHttps    *bool
+	testTrace    *bool
+	statusFilter *statusFilter
 }
 
 type HttpMixerResult struct {
@@ -80,7 +89,11 @@ func (h *HttpMixer) Start(f resultF) {
 	go func() {
 		defer outWG.Done()
 		for o := range outChannel {
-			f(o)
+			_, found := whichCategory(o.statusCode, h.options.statusFilter)
+			if found {
+				// fmt.Println(category, o.statusCode)
+				f(o)
+			}
 		}
 	}()
 

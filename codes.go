@@ -133,34 +133,37 @@ func (c *categoryCache) set(statusCode int, category Category) {
 
 var cache = newCategoryCache()
 
-func whichCategory(statusCode int) Category {
+func whichCategory(statusCode int, filter *statusFilter) (Category, bool) {
 	cat, exist := cache.get(statusCode)
 	if exist {
-		return cat
+		return cat, true
 	}
 
-	if _inSlice(InformationalCodes, statusCode) {
+	if *filter.showAll && _inSlice(InformationalCodes, statusCode) || *filter.onlyInfo && _inSlice(InformationalCodes, statusCode) {
 		cache.set(statusCode, InformationalCategory)
-		return InformationalCategory
+		return InformationalCategory, true
 	}
 
-	if _inSlice(SuccessCodes, statusCode) {
+	if *filter.showAll && _inSlice(SuccessCodes, statusCode) || *filter.onlySuccess && _inSlice(SuccessCodes, statusCode) {
 		cache.set(statusCode, SuccessCategory)
-		return SuccessCategory
+		return SuccessCategory, true
 	}
 
-	if _inSlice(ClientErrorCodes, statusCode) {
+	if *filter.showAll && _inSlice(ClientErrorCodes, statusCode) || *filter.onlyClientErr && _inSlice(ClientErrorCodes, statusCode) {
 		cache.set(statusCode, ClientErrorCategory)
-		return ClientErrorCategory
+		return ClientErrorCategory, true
 	}
 
-	if _inSlice(ServerErrorCodes, statusCode) {
+	if *filter.showAll && _inSlice(ServerErrorCodes, statusCode) || *filter.onlyServerErr && _inSlice(ServerErrorCodes, statusCode) {
 		cache.set(statusCode, ServerErrorCategory)
-		return ServerErrorCategory
+		return ServerErrorCategory, true
 	}
 
-	cache.set(statusCode, UnknownCategory)
-	return UnknownCategory
+	if *filter.showAll {
+		cache.set(statusCode, UnknownCategory)
+	}
+
+	return UnknownCategory, false
 }
 
 func _aggregateCodes(m map[int]string) []int {

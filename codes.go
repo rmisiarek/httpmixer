@@ -79,3 +79,64 @@ var StatusServerError = map[int]string{
 	511: "Network Authentication Required",
 	599: "Network Connect Timeout Error",
 }
+
+var (
+	InformationalCodes = _aggregateCodes(StatusInformational)
+	SuccessCodes       = _aggregateCodes(StatusSuccess)
+	ClientErrorCodes   = _aggregateCodes(StatusClientError)
+	ServerErrorCodes   = _aggregateCodes(StatusServerError)
+)
+
+type Category int
+
+const (
+	InformationalCategory Category = iota
+	SuccessCategory
+	ClientErrorCategory
+	ServerErrorCategory
+	UnknownCategory
+)
+
+func whichCategory(statusCode int) Category {
+
+	// TODO: first check in cache
+
+	if _inSlice(InformationalCodes, statusCode) {
+		return InformationalCategory
+	}
+
+	if _inSlice(SuccessCodes, statusCode) {
+		return SuccessCategory
+	}
+
+	if _inSlice(ClientErrorCodes, statusCode) {
+		return ClientErrorCategory
+	}
+
+	if _inSlice(ServerErrorCodes, statusCode) {
+		return ServerErrorCategory
+	}
+
+	return UnknownCategory
+}
+
+func _aggregateCodes(m map[int]string) []int {
+	keys := make([]int, len(m))
+
+	i := 0
+	for k := range m {
+		keys[i] = k
+		i++
+	}
+
+	return keys
+}
+
+func _inSlice(s []int, v int) bool {
+	for _, a := range s {
+		if a == v {
+			return true
+		}
+	}
+	return false
+}

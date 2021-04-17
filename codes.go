@@ -1,5 +1,9 @@
 package main
 
+import (
+	"sync"
+)
+
 // Prepared based on https://httpstatuses.com/
 
 var StatusInformational = map[int]string{
@@ -97,26 +101,65 @@ const (
 	UnknownCategory
 )
 
-func whichCategory(statusCode int) Category {
+type categoryCache struct {
+	codes map[int]Category
+	sync.Mutex
+}
 
-	// TODO: first check in cache
+func newCategoryCache() *categoryCache {
+	return &categoryCache{
+		codes: make(map[int]Category),
+	}
+}
+
+func (c *categoryCache) get(statusCode int) (Category, bool) {
+	c.Lock()
+	defer c.Unlock()
+
+	category, exist := c.codes[statusCode]
+	if exist {
+		return category, true
+	}
+
+	return UnknownCategory, false
+}
+
+func (c *categoryCache) set(statusCode int, category Category) {
+	c.Lock()
+	defer c.Unlock()
+
+	c.codes[statusCode] = category
+}
+
+var cache = newCategoryCache()
+
+func whichCategory(statusCode int) Category {
+	cat, exist := cache.get(statusCode)
+	if exist {
+		return cat
+	}
 
 	if _inSlice(InformationalCodes, statusCode) {
+		cache.set(statusCode, InformationalCategory)
 		return InformationalCategory
 	}
 
 	if _inSlice(SuccessCodes, statusCode) {
+		cache.set(statusCode, SuccessCategory)
 		return SuccessCategory
 	}
 
 	if _inSlice(ClientErrorCodes, statusCode) {
+		cache.set(statusCode, ClientErrorCategory)
 		return ClientErrorCategory
 	}
 
 	if _inSlice(ServerErrorCodes, statusCode) {
+		cache.set(statusCode, ServerErrorCategory)
 		return ServerErrorCategory
 	}
 
+	cache.set(statusCode, UnknownCategory)
 	return UnknownCategory
 }
 

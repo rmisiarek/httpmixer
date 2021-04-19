@@ -133,7 +133,7 @@ func (c *categoryCache) set(statusCode int, category Category) {
 
 var cache = newCategoryCache()
 
-func whichCategory(statusCode int, filter *statusFilter) (Category, bool) {
+func resolveCategory(statusCode int, filter *statusFilter) (Category, bool) {
 	cat, exist := cache.get(statusCode)
 	if exist {
 		return cat, true

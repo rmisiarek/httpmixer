@@ -89,7 +89,7 @@ func (h *HttpMixer) Start(f resultF) {
 	go func() {
 		defer outWG.Done()
 		for o := range outChannel {
-			_, found := whichCategory(o.statusCode, h.options.statusFilter)
+			_, found := resolveCategory(o.statusCode, h.options.statusFilter)
 			if found {
 				// fmt.Println(category, o.statusCode)
 				f(o)

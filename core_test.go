@@ -28,8 +28,8 @@ func TestNewHttpMixerStdinSource(t *testing.T) {
 	assert.Equal(t, 2, *mixer.options.concurrency)
 	assert.Equal(t, 5, *mixer.options.timeout)
 	assert.Equal(t, false, *mixer.options.redirect)
-	assert.Equal(t, true, *mixer.options.skipHttp)
-	assert.Equal(t, true, *mixer.options.skipHttps)
+	assert.Equal(t, false, *mixer.options.skipHttp)
+	assert.Equal(t, false, *mixer.options.skipHttps)
 	assert.Equal(t, true, *mixer.options.testTrace)
 }
 
@@ -69,23 +69,82 @@ func createTemporarySourceFile() *os.File {
 	return tmpFile
 }
 
+func TestUrlsWthProtocols(t *testing.T) {
+	_true := true
+	_false := false
+
+	opts := mixerOptions()
+	mixer := NewHttpMixer(&opts)
+
+	expected := []string{"http://www.example.com", "https://www.example.com"}
+
+	// Three tests for both http and https
+	result := mixer.wthProtocols("www.example.com")
+	assert.Equal(t, expected, result)
+
+	result = mixer.wthProtocols("http://www.example.com")
+	assert.Equal(t, expected, result)
+
+	result = mixer.wthProtocols("https://www.example.com")
+	assert.Equal(t, expected, result)
+
+	// Three tests for https only
+	mixer.options.skipHttp = &_true
+
+	result = mixer.wthProtocols("http://www.example.com")
+	assert.Equal(t, []string{"https://www.example.com"}, result)
+
+	result = mixer.wthProtocols("https://www.example.com")
+	assert.Equal(t, []string{"https://www.example.com"}, result)
+
+	result = mixer.wthProtocols("www.example.com")
+	assert.Equal(t, []string{"https://www.example.com"}, result)
+
+	// Three tests for http only
+	mixer.options.skipHttp = &_false
+	mixer.options.skipHttps = &_true
+
+	result = mixer.wthProtocols("http://www.example.com")
+	assert.Equal(t, []string{"http://www.example.com"}, result)
+
+	result = mixer.wthProtocols("https://www.example.com")
+	assert.Equal(t, []string{"http://www.example.com"}, result)
+
+	result = mixer.wthProtocols("www.example.com")
+	assert.Equal(t, []string{"http://www.example.com"}, result)
+}
+
 func mixerOptions() HttpMixerOptions {
 	source := ""
 	concurrency := 2
 	timeout := 5
 	redirect := false
-	skipHttp := true
-	skipHttps := true
+	skipHttp := false
+	skipHttps := false
 	testTrace := true
+	showAll := true
+	onlyInfo := false
+	onlySuccess := false
+	onlyClientErr := false
+	onlyServerErr := false
+
+	filter := statusFilter{
+		showAll:       &showAll,
+		onlyInfo:      &onlyInfo,
+		onlySuccess:   &onlySuccess,
+		onlyClientErr: &onlyClientErr,
+		onlyServerErr: &onlyServerErr,
+	}
 
 	opts := HttpMixerOptions{
-		source:      &source,
-		concurrency: &concurrency,
-		timeout:     &timeout,
-		redirect:    &redirect,
-		skipHttp:    &skipHttp,
-		skipHttps:   &skipHttps,
-		testTrace:   &testTrace,
+		source:       &source,
+		concurrency:  &concurrency,
+		timeout:      &timeout,
+		redirect:     &redirect,
+		skipHttp:     &skipHttp,
+		skipHttps:    &skipHttps,
+		testTrace:    &testTrace,
+		statusFilter: &filter,
 	}
 
 	return opts

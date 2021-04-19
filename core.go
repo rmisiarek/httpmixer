@@ -106,7 +106,7 @@ func (h *HttpMixer) Start(f resultF) {
 func (h *HttpMixer) feed(feedChannel chan *feedData) {
 	scanner := bufio.NewScanner(h.source)
 	for scanner.Scan() {
-		urls := h.urlsWthProtocols(scanner.Text())
+		urls := h.wthProtocols(scanner.Text())
 		for _, url := range urls {
 			feedChannel <- &feedData{
 				method: "GET",
@@ -122,23 +122,18 @@ func (h *HttpMixer) feed(feedChannel chan *feedData) {
 	}
 }
 
-func (h *HttpMixer) urlsWthProtocols(url string) []string {
+func (h *HttpMixer) wthProtocols(url string) []string {
 	result := []string{}
 
+	url = strings.TrimPrefix(url, "https://")
+	url = strings.TrimPrefix(url, "http://")
+
 	if !*h.options.skipHttp {
-		if !strings.HasPrefix(url, "http") {
-			result = append(result, "http://"+url)
-		} else {
-			result = append(result, url)
-		}
+		result = append(result, "http://"+url)
 	}
 
 	if !*h.options.skipHttps {
-		if !strings.HasPrefix(url, "https") {
-			result = append(result, "https://"+url)
-		} else {
-			result = append(result, url)
-		}
+		result = append(result, "https://"+url)
 	}
 
 	return result

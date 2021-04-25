@@ -46,6 +46,8 @@ func main() {
 		fmt.Println(o)
 	}
 
+	printInfo(options)
+
 	mixer := NewHttpMixer(options)
 	mixer.Start(f)
 }

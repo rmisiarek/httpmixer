@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 )
@@ -31,6 +32,75 @@ type HttpMixerOptions struct {
 	skipHttps    *bool
 	testTrace    *bool
 	statusFilter *statusFilter
+}
+
+func (o *HttpMixerOptions) reprSource() string {
+	if *o.source == "" {
+		return Blue("source: ") + Green("stdin")
+	}
+	return Blue("source: ") + Green(*o.source)
+}
+
+func (o *HttpMixerOptions) reprConcurenncy() string {
+	return Blue("concurrency: ") + Green(strconv.Itoa(*o.concurrency))
+}
+
+func (o *HttpMixerOptions) reprTimeout() string {
+	return Blue("timeout: ") + Green(strconv.Itoa(*o.timeout))
+}
+
+func (o *HttpMixerOptions) reprRedirect() string {
+	if *o.redirect {
+		return Blue("redirect: ") + Green("on")
+	} else {
+		return Blue("redirect: ") + Red("off")
+	}
+}
+
+func (o *HttpMixerOptions) reprSkipHttp() string {
+	if *o.skipHttp {
+		return Blue("HTTP: ") + Red("off")
+	} else {
+		return Blue("HTTP: ") + Green("on")
+	}
+}
+
+func (o *HttpMixerOptions) reprSkipHttps() string {
+	if *o.skipHttps {
+		return Blue("HTTPS: ") + Red("off")
+	} else {
+		return Blue("HTTPS: ") + Green("on")
+	}
+}
+
+func (o *HttpMixerOptions) reprTestTrace() string {
+	if *o.testTrace {
+		return Blue("trace: ") + Green("on")
+	} else {
+		return Blue("trace: ") + Red("off")
+	}
+}
+
+func (o *HttpMixerOptions) reprStatusFilter() string {
+	result := []string{}
+
+	if *o.statusFilter.showAll {
+		return Blue("filter: ") + Green("all")
+	}
+	if *o.statusFilter.onlyInfo {
+		result = append(result, "info")
+	}
+	if *o.statusFilter.onlySuccess {
+		result = append(result, "success")
+	}
+	if *o.statusFilter.onlyClientErr {
+		result = append(result, "client error")
+	}
+	if *o.statusFilter.onlyServerErr {
+		result = append(result, "server error")
+	}
+
+	return Blue("filter: ") + Green(strings.Join(result, ", "))
 }
 
 type HttpMixerResult struct {

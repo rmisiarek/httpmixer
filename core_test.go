@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"strconv"
 	"testing"
 	"time"
 
@@ -112,6 +113,41 @@ func TestUrlsWthProtocols(t *testing.T) {
 
 	result = mixer.wthProtocols("www.example.com")
 	assert.Equal(t, []string{"http://www.example.com"}, result)
+}
+
+func TestHttpMixerOptionsRepr(t *testing.T) {
+	o := mixerOptions()
+
+	assert.Equal(t, Blue("source: ")+Green("stdin"), o.reprSource())
+	assert.Equal(t, Blue("concurrency: ")+Green(strconv.Itoa(2)), o.reprConcurenncy())
+	assert.Equal(t, Blue("timeout: ")+Green(strconv.Itoa(5)), o.reprTimeout())
+	assert.Equal(t, Blue("redirect: ")+Red("off"), o.reprRedirect())
+	assert.Equal(t, Blue("HTTP: ")+Green("on"), o.reprSkipHttp())
+	assert.Equal(t, Blue("HTTPS: ")+Green("on"), o.reprSkipHttps())
+	assert.Equal(t, Blue("trace: ")+Green("on"), o.reprTestTrace())
+	assert.Equal(t, Blue("filter: ")+Green("all"), o.reprStatusFilter())
+
+	source := "/tmp/file.txt"
+	_true := true
+	_false := false
+
+	o.source = &source
+	o.redirect = &_true
+	o.skipHttp = &_true
+	o.skipHttps = &_true
+	o.testTrace = &_false
+	o.statusFilter.showAll = &_false
+	o.statusFilter.onlyClientErr = &_true
+	o.statusFilter.onlyInfo = &_true
+	o.statusFilter.onlyServerErr = &_true
+	o.statusFilter.onlySuccess = &_true
+
+	assert.Equal(t, Blue("source: ")+Green("/tmp/file.txt"), o.reprSource())
+	assert.Equal(t, Blue("redirect: ")+Green("on"), o.reprRedirect())
+	assert.Equal(t, Blue("HTTP: ")+Red("off"), o.reprSkipHttp())
+	assert.Equal(t, Blue("HTTPS: ")+Red("off"), o.reprSkipHttps())
+	assert.Equal(t, Blue("trace: ")+Red("off"), o.reprTestTrace())
+	assert.Equal(t, Blue("filter: ")+Green("info, success, client error, server error"), o.reprStatusFilter())
 }
 
 func mixerOptions() HttpMixerOptions {

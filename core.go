@@ -4,10 +4,12 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 )
 
 type feedData struct {
@@ -25,6 +27,7 @@ type statusFilter struct {
 
 type HttpMixerOptions struct {
 	source       *string
+	output       *string
 	concurrency  *int
 	timeout      *int
 	redirect     *bool
@@ -39,6 +42,13 @@ func (o *HttpMixerOptions) reprSource() string {
 		return Blue("source: ") + Green("stdin")
 	}
 	return Blue("source: ") + Green(*o.source)
+}
+
+func (o *HttpMixerOptions) reprOutput() string {
+	if *o.output == "" {
+		return Blue("output: ") + Green("stdout")
+	}
+	return Blue("output: ") + Green(*o.output)
 }
 
 func (o *HttpMixerOptions) reprConcurenncy() string {
@@ -132,6 +142,16 @@ func (h *HttpMixer) Start(f resultF) {
 	outWG := &sync.WaitGroup{}
 	feedWG := &sync.WaitGroup{}
 
+	saveOutput := false
+	var outputFile io.WriteCloser
+	var outputWriter *bufio.Writer
+
+	if *h.options.output != "" {
+		saveOutput = true
+		outputFile = createFile(*h.options.output)
+		outputWriter = bufio.NewWriter(outputFile)
+	}
+
 	for i := 0; i < *h.options.concurrency; i++ {
 		feedWG.Add(1)
 		go func() {
@@ -163,6 +183,12 @@ func (h *HttpMixer) Start(f resultF) {
 			if found {
 				// fmt.Println(category, o.statusCode)
 				f(o)
+				if saveOutput {
+					_, err := outputWriter.WriteString(o.url + "\n")
+					if err != nil {
+						log.Fatalf("error while writing to a file: %s", err.Error())
+					}
+				}
 			}
 		}
 	}()
@@ -171,6 +197,11 @@ func (h *HttpMixer) Start(f resultF) {
 
 	close(feedChannel)
 	outWG.Wait()
+
+	if saveOutput {
+		outputWriter.Flush()
+		outputFile.Close()
+	}
 }
 
 func (h *HttpMixer) feed(feedChannel chan *feedData) {
@@ -226,4 +257,28 @@ func openFile(filepath string) *os.File {
 	}
 
 	return file
+}
+
+func createFile(filepath string) *os.File {
+	exist := fileExists(filepath)
+	if exist {
+		fmt.Println(Red(fmt.Sprintf(">> %s exists and will be overwritten. Are you sure? 6 seconds to GO\n", filepath)))
+		time.Sleep(6 * time.Second)
+	}
+
+	file, err := os.Create(filepath)
+	if err != nil {
+		panic(err)
+	}
+
+	return file
+}
+
+func fileExists(filepath string) bool {
+	info, err := os.Stat(filepath)
+	if os.IsNotExist(err) {
+		return false
+	}
+
+	return !info.IsDir()
 }

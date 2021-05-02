@@ -7,8 +7,9 @@ import (
 
 func main() {
 	source := flag.String("source", "", "Path to file with URL's to test (default: stdin)")
+	output := flag.String("output", "", "Path to output file (default: stdout)")
 	concurrency := flag.Int("concurrency", 100, "Concurrency level (defaqqqqult: 100)")
-	timeout := flag.Int("timeout", 30, "Timeout in seconds (default: 30q)")
+	timeout := flag.Int("timeout", 30, "Timeout in seconds (default: 30s)")
 	redirect := flag.Bool("redirect", true, "Follow redirections? (default: true)")
 	skipHttp := flag.Bool("skip-http", false, "Skip testing HTTP protocol (default: false)")
 	skipHttps := flag.Bool("skip-https", false, "Skip testing HTTPS protocol (default: false)")
@@ -27,6 +28,7 @@ func main() {
 
 	options := &HttpMixerOptions{
 		source:      source,
+		output:      output,
 		concurrency: concurrency,
 		redirect:    redirect,
 		timeout:     timeout,

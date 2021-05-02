@@ -2,6 +2,8 @@ package main
 
 import (
 	"bufio"
+	"bytes"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -119,6 +121,7 @@ func TestHttpMixerOptionsRepr(t *testing.T) {
 	o := mixerOptions()
 
 	assert.Equal(t, Blue("source: ")+Green("stdin"), o.reprSource())
+	assert.Equal(t, Blue("output: ")+Green("stdout"), o.reprOutput())
 	assert.Equal(t, Blue("concurrency: ")+Green(strconv.Itoa(2)), o.reprConcurenncy())
 	assert.Equal(t, Blue("timeout: ")+Green(strconv.Itoa(5)), o.reprTimeout())
 	assert.Equal(t, Blue("redirect: ")+Red("off"), o.reprRedirect())
@@ -128,10 +131,12 @@ func TestHttpMixerOptionsRepr(t *testing.T) {
 	assert.Equal(t, Blue("filter: ")+Green("all"), o.reprStatusFilter())
 
 	source := "/tmp/file.txt"
+	output := "/tmp/results.txt"
 	_true := true
 	_false := false
 
 	o.source = &source
+	o.output = &output
 	o.redirect = &_true
 	o.skipHttp = &_true
 	o.skipHttps = &_true
@@ -143,6 +148,7 @@ func TestHttpMixerOptionsRepr(t *testing.T) {
 	o.statusFilter.onlySuccess = &_true
 
 	assert.Equal(t, Blue("source: ")+Green("/tmp/file.txt"), o.reprSource())
+	assert.Equal(t, Blue("output: ")+Green("/tmp/results.txt"), o.reprOutput())
 	assert.Equal(t, Blue("redirect: ")+Green("on"), o.reprRedirect())
 	assert.Equal(t, Blue("HTTP: ")+Red("off"), o.reprSkipHttp())
 	assert.Equal(t, Blue("HTTPS: ")+Red("off"), o.reprSkipHttps())
@@ -150,8 +156,40 @@ func TestHttpMixerOptionsRepr(t *testing.T) {
 	assert.Equal(t, Blue("filter: ")+Green("info, success, client error, server error"), o.reprStatusFilter())
 }
 
+func TestCreateFile(t *testing.T) {
+	// Catch loggers output
+	var buf bytes.Buffer
+	log.SetOutput(&buf)
+	defer func() {
+		log.SetOutput(os.Stdout)
+	}()
+
+	f := createFile("/tmp/results-file.txt", 0)
+	assert.Equal(t, "/tmp/results-file.txt", f.Name())
+
+	logExpected := Red(fmt.Sprintf(
+		">> %s exists and will be overwritten. Are you sure? %d seconds to GO\n",
+		f.Name(), 0,
+	))
+
+	assert.Contains(t, buf.String(), logExpected)
+
+	assert.Panics(t, func() { createFile("tmp/there-is-no-results-file.txt", 0) })
+}
+
+func TestFileExists(t *testing.T) {
+	path := "/tmp/results.txt"
+	exist := fileExists(path)
+	assert.Equal(t, false, exist)
+
+	file, _ := ioutil.TempFile("/tmp", "*.txt")
+	exist = fileExists(file.Name())
+	assert.Equal(t, true, exist)
+}
+
 func mixerOptions() HttpMixerOptions {
 	source := ""
+	output := ""
 	concurrency := 2
 	timeout := 5
 	redirect := false
@@ -174,6 +212,7 @@ func mixerOptions() HttpMixerOptions {
 
 	opts := HttpMixerOptions{
 		source:       &source,
+		output:       &output,
 		concurrency:  &concurrency,
 		timeout:      &timeout,
 		redirect:     &redirect,

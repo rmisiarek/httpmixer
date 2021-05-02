@@ -148,7 +148,7 @@ func (h *HttpMixer) Start(f resultF) {
 
 	if *h.options.output != "" {
 		saveOutput = true
-		outputFile = createFile(*h.options.output)
+		outputFile = createFile(*h.options.output, 5)
 		outputWriter = bufio.NewWriter(outputFile)
 	}
 
@@ -259,11 +259,14 @@ func openFile(filepath string) *os.File {
 	return file
 }
 
-func createFile(filepath string) *os.File {
+func createFile(filepath string, sleepSec int) *os.File {
 	exist := fileExists(filepath)
 	if exist {
-		fmt.Println(Red(fmt.Sprintf(">> %s exists and will be overwritten. Are you sure? 6 seconds to GO\n", filepath)))
-		time.Sleep(6 * time.Second)
+		log.Println(Red(fmt.Sprintf(
+			">> %s exists and will be overwritten. Are you sure? %d seconds to GO\n",
+			filepath, sleepSec,
+		)))
+		time.Sleep(time.Duration(sleepSec) * time.Second)
 	}
 
 	file, err := os.Create(filepath)

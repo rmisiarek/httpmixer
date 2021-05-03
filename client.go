@@ -9,17 +9,17 @@ type HttpClient struct {
 	client *http.Client
 }
 
-var noRedirect = func(req *http.Request, via []*http.Request) error {
+var noRedirectF = func(req *http.Request, via []*http.Request) error {
 	return http.ErrUseLastResponse
 }
 
-func getClient(redirect *bool, timeout *int) *HttpClient {
+func getClient(withoutRedirect *bool, timeout *int) *HttpClient {
 	client := &http.Client{
 		Timeout: time.Duration(*timeout) * time.Second,
 	}
 
-	if !*redirect {
-		client.CheckRedirect = noRedirect
+	if *withoutRedirect {
+		client.CheckRedirect = noRedirectF
 	}
 
 	return &HttpClient{client: client}

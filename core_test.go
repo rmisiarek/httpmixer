@@ -15,22 +15,25 @@ import (
 )
 
 func TestNewHttpMixerStdinSource(t *testing.T) {
+	_true := true
 	opts := mixerOptions()
+	opts.noRedirect = &_true
+
 	mixer := NewHttpMixer(&opts)
 
 	// Test whether the function has been set correctly
-	f1 := noRedirect(nil, nil)
+	f1 := noRedirectF(nil, nil)
 	f2 := mixer.client.client.CheckRedirect(nil, nil)
 	assert.Equal(t, f1, f2)
 
-	// Test whether has been set correctly
+	// Test whether timeout has been set correctly
 	assert.Equal(t, time.Duration(5)*time.Second, mixer.client.client.Timeout)
 
 	// Test access to HttpMixerOptions values
 	assert.Equal(t, "", *mixer.options.source)
 	assert.Equal(t, 2, *mixer.options.concurrency)
 	assert.Equal(t, 5, *mixer.options.timeout)
-	assert.Equal(t, false, *mixer.options.redirect)
+	assert.Equal(t, true, *mixer.options.noRedirect)
 	assert.Equal(t, false, *mixer.options.skipHttp)
 	assert.Equal(t, false, *mixer.options.skipHttps)
 	assert.Equal(t, true, *mixer.options.testTrace)
@@ -124,7 +127,7 @@ func TestHttpMixerOptionsRepr(t *testing.T) {
 	assert.Equal(t, Blue("output: ")+Green("stdout"), o.reprOutput())
 	assert.Equal(t, Blue("concurrency: ")+Green(strconv.Itoa(2)), o.reprConcurenncy())
 	assert.Equal(t, Blue("timeout: ")+Green(strconv.Itoa(5)), o.reprTimeout())
-	assert.Equal(t, Blue("redirect: ")+Red("off"), o.reprRedirect())
+	assert.Equal(t, Blue("redirect: ")+Green("on"), o.reprRedirect())
 	assert.Equal(t, Blue("HTTP: ")+Green("on"), o.reprSkipHttp())
 	assert.Equal(t, Blue("HTTPS: ")+Green("on"), o.reprSkipHttps())
 	assert.Equal(t, Blue("trace: ")+Green("on"), o.reprTestTrace())
@@ -137,7 +140,7 @@ func TestHttpMixerOptionsRepr(t *testing.T) {
 
 	o.source = &source
 	o.output = &output
-	o.redirect = &_true
+	o.noRedirect = &_true
 	o.skipHttp = &_true
 	o.skipHttps = &_true
 	o.testTrace = &_false
@@ -149,7 +152,7 @@ func TestHttpMixerOptionsRepr(t *testing.T) {
 
 	assert.Equal(t, Blue("source: ")+Green("/tmp/file.txt"), o.reprSource())
 	assert.Equal(t, Blue("output: ")+Green("/tmp/results.txt"), o.reprOutput())
-	assert.Equal(t, Blue("redirect: ")+Green("on"), o.reprRedirect())
+	assert.Equal(t, Blue("redirect: ")+Red("off"), o.reprRedirect())
 	assert.Equal(t, Blue("HTTP: ")+Red("off"), o.reprSkipHttp())
 	assert.Equal(t, Blue("HTTPS: ")+Red("off"), o.reprSkipHttps())
 	assert.Equal(t, Blue("trace: ")+Red("off"), o.reprTestTrace())
@@ -215,7 +218,7 @@ func mixerOptions() HttpMixerOptions {
 		output:       &output,
 		concurrency:  &concurrency,
 		timeout:      &timeout,
-		redirect:     &redirect,
+		noRedirect:   &redirect,
 		skipHttp:     &skipHttp,
 		skipHttps:    &skipHttps,
 		testTrace:    &testTrace,

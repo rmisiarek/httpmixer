@@ -10,8 +10,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNoRedirect(t *testing.T) {
-	f := noRedirect(nil, nil)
+func TestNoRedirectF(t *testing.T) {
+	f := noRedirectF(nil, nil)
 	assert.Equal(t, f, http.ErrUseLastResponse)
 }
 
@@ -52,7 +52,7 @@ func TestRequestWithRedirect(t *testing.T) {
 	}))
 	defer s.Close()
 
-	redirect := false
+	redirect := true
 	timeout := 10
 
 	c := getClient(&redirect, &timeout)

@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 )
 
 func main() {
@@ -10,7 +9,7 @@ func main() {
 	output := flag.String("output", "", "Path to output file (default: stdout)")
 	concurrency := flag.Int("concurrency", 100, "Concurrency level (defaqqqqult: 100)")
 	timeout := flag.Int("timeout", 30, "Timeout in seconds (default: 30s)")
-	redirect := flag.Bool("redirect", true, "Follow redirections? (default: true)")
+	noRedirect := flag.Bool("no-redirect", false, "Don't follow redirections (default: false)")
 	skipHttp := flag.Bool("skip-http", false, "Skip testing HTTP protocol (default: false)")
 	skipHttps := flag.Bool("skip-https", false, "Skip testing HTTPS protocol (default: false)")
 	testTrace := flag.Bool("test-trace", false, "Test TRACE method? (default: false)")
@@ -30,7 +29,7 @@ func main() {
 		source:      source,
 		output:      output,
 		concurrency: concurrency,
-		redirect:    redirect,
+		noRedirect:  noRedirect,
 		timeout:     timeout,
 		skipHttp:    skipHttp,
 		skipHttps:   skipHttps,
@@ -44,12 +43,12 @@ func main() {
 		},
 	}
 
-	f := func(o *HttpMixerResult) {
-		fmt.Println(o)
-	}
+	// f := func(o *HttpMixerResult) {
+	// 	fmt.Println(o)
+	// }
 
 	printInfo(options)
 
 	mixer := NewHttpMixer(options)
-	mixer.Start(f)
+	mixer.Start(printResult)
 }

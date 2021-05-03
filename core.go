@@ -30,7 +30,7 @@ type HttpMixerOptions struct {
 	output       *string
 	concurrency  *int
 	timeout      *int
-	redirect     *bool
+	noRedirect   *bool
 	skipHttp     *bool
 	skipHttps    *bool
 	testTrace    *bool
@@ -60,7 +60,7 @@ func (o *HttpMixerOptions) reprTimeout() string {
 }
 
 func (o *HttpMixerOptions) reprRedirect() string {
-	if *o.redirect {
+	if !*o.noRedirect {
 		return Blue("redirect: ") + Green("on")
 	} else {
 		return Blue("redirect: ") + Red("off")
@@ -129,7 +129,7 @@ type HttpMixer struct {
 func NewHttpMixer(opts *HttpMixerOptions) *HttpMixer {
 	return &HttpMixer{
 		source:  openStdinOrFile(opts.source),
-		client:  getClient(opts.redirect, opts.timeout),
+		client:  getClient(opts.noRedirect, opts.timeout),
 		options: opts,
 	}
 }
@@ -158,7 +158,7 @@ func (h *HttpMixer) Start(f resultF) {
 			for feed := range feedChannel {
 				result, err := h.client.request(&feed.url, feed.method)
 				if err != nil {
-					fmt.Println(err.Error())
+					// fmt.Println(err.Error())
 					continue
 				}
 

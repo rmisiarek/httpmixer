@@ -53,6 +53,7 @@ func TestResolveCategory(t *testing.T) {
 	want := map[int]Category{
 		100: InformationalCategory,
 		200: SuccessCategory,
+		300: RedirectionCategory,
 		400: ClientErrorCategory,
 		500: ServerErrorCategory,
 		999: UnknownCategory,

@@ -87,6 +87,7 @@ var StatusServerError = map[int]string{
 var (
 	InformationalCodes = _aggregateCodes(StatusInformational)
 	SuccessCodes       = _aggregateCodes(StatusSuccess)
+	RedirectionCodes   = _aggregateCodes(StatusRedirection)
 	ClientErrorCodes   = _aggregateCodes(StatusClientError)
 	ServerErrorCodes   = _aggregateCodes(StatusServerError)
 )
@@ -96,6 +97,7 @@ type Category int
 const (
 	InformationalCategory Category = iota
 	SuccessCategory
+	RedirectionCategory
 	ClientErrorCategory
 	ServerErrorCategory
 	UnknownCategory
@@ -147,6 +149,11 @@ func resolveCategory(statusCode int, filter *statusFilter) (Category, bool) {
 	if *filter.showAll && _inSlice(SuccessCodes, statusCode) || *filter.onlySuccess && _inSlice(SuccessCodes, statusCode) {
 		cache.set(statusCode, SuccessCategory)
 		return SuccessCategory, true
+	}
+
+	if *filter.showAll && _inSlice(RedirectionCodes, statusCode) {
+		cache.set(statusCode, RedirectionCategory)
+		return RedirectionCategory, true
 	}
 
 	if *filter.showAll && _inSlice(ClientErrorCodes, statusCode) || *filter.onlyClientErr && _inSlice(ClientErrorCodes, statusCode) {

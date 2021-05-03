@@ -11,8 +11,7 @@ import (
 func tab(descriptionLen int) string {
 	maxLenOfDescription := 34
 	repeat := float64(maxLenOfDescription-descriptionLen) / float64(8)
-	fmt.Println(repeat)
-	if ((maxLenOfDescription - descriptionLen) % 8) > 5 {
+	if ((maxLenOfDescription - descriptionLen) % 8) >= 5 {
 		return strings.Repeat("\t", int(math.Ceil(repeat)))
 	}
 	return strings.Repeat("\t", int(math.Floor(repeat)))

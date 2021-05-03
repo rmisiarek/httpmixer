@@ -1,37 +1,50 @@
 package main
 
 import (
-	"log"
+	"fmt"
+	"math"
 	"strconv"
+	"strings"
 )
 
-func printResult(url string, status int) {
-	s := strconv.Itoa(status)
+// TODO: find better way for this
+func tab(descriptionLen int) string {
+	maxLenOfDescription := 34
+	repeat := float64(maxLenOfDescription-descriptionLen) / float64(8)
+	fmt.Println(repeat)
+	if ((maxLenOfDescription - descriptionLen) % 8) > 5 {
+		return strings.Repeat("\t", int(math.Ceil(repeat)))
+	}
+	return strings.Repeat("\t", int(math.Floor(repeat)))
+}
 
-	if description, ok := StatusInformational[status]; ok {
-		log.Printf("[ %s %s ] %s \n", Blue(s), Blue(description), url)
+func printResult(o *HttpMixerResult) {
+	s := strconv.Itoa(o.statusCode)
+
+	if description, ok := StatusInformational[o.statusCode]; ok {
+		fmt.Printf("%s\t\t%s\t\t%s\t%s%s\n", Blue(o.method), Blue(s), Blue(description), tab(len(description)), o.url)
 		return
 	}
 
-	if description, ok := StatusSuccess[status]; ok {
-		log.Printf("[ %s %s ] %s \n", Green(s), Green(description), url)
+	if description, ok := StatusSuccess[o.statusCode]; ok {
+		fmt.Printf("%s\t\t%s\t\t%s\t%s%s\n", Blue(o.method), Green(s), Green(description), tab(len(description)), o.url)
 		return
 	}
 
-	if description, ok := StatusRedirection[status]; ok {
-		log.Printf("[ %s %s ] %s \n", Yellow(s), Yellow(description), url)
+	if description, ok := StatusRedirection[o.statusCode]; ok {
+		fmt.Printf("%s\t\t%s\t\t%s\t%s%s\n", Blue(o.method), Yellow(s), Yellow(description), tab(len(description)), o.url)
 		return
 	}
 
-	if description, ok := StatusClientError[status]; ok {
-		log.Printf("[ %s %s ] %s \n", Red(s), Red(description), url)
+	if description, ok := StatusClientError[o.statusCode]; ok {
+		fmt.Printf("%s\t\t%s\t\t%s\t%s%s\n", Blue(o.method), Purple(s), Purple(description), tab(len(description)), o.url)
 		return
 	}
 
-	if description, ok := StatusServerError[status]; ok {
-		log.Printf("[ %s %s ] %s \n", Red(s), Red(description), url)
+	if description, ok := StatusServerError[o.statusCode]; ok {
+		fmt.Printf("%s\t\t%s\t\t%s\t%s%s\n", Blue(o.method), Red(s), Red(description), tab(len(description)), o.url)
 		return
 	}
 
-	log.Printf("[ %s ] %s \n", Gray(s), url)
+	fmt.Printf("%s\t\t%s\t\t%s\t%s%s\n", Blue(o.method), Gray(s), Gray("not found"), tab(len("not found")), o.url)
 }

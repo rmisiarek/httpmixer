@@ -18,32 +18,21 @@ func tab(descriptionLen int) string {
 }
 
 func printResult(o *HttpMixerResult) {
-	s := strconv.Itoa(o.statusCode)
+	status := strconv.Itoa(o.statusCode)
+	description := o.resolvedCategory.description
 
-	if description, ok := StatusInformational[o.statusCode]; ok {
-		fmt.Printf("%s\t\t%s\t\t%s\t%s%s\n", Blue(o.method), Blue(s), Blue(description), tab(len(description)), o.url)
-		return
+	switch o.resolvedCategory.category {
+	case InformationalCategory:
+		fmt.Printf("%s\t\t%s\t\t%s\t%s%s\n", Blue(o.method), Blue(status), Blue(description), tab(len(description)), o.url)
+	case SuccessCategory:
+		fmt.Printf("%s\t\t%s\t\t%s\t%s%s\n", Blue(o.method), Green(status), Green(description), tab(len(description)), o.url)
+	case RedirectionCategory:
+		fmt.Printf("%s\t\t%s\t\t%s\t%s%s\n", Blue(o.method), Yellow(status), Yellow(description), tab(len(description)), o.url)
+	case ClientErrorCategory:
+		fmt.Printf("%s\t\t%s\t\t%s\t%s%s\n", Blue(o.method), Purple(status), Purple(description), tab(len(description)), o.url)
+	case ServerErrorCategory:
+		fmt.Printf("%s\t\t%s\t\t%s\t%s%s\n", Blue(o.method), Red(status), Red(description), tab(len(description)), o.url)
+	default:
+		fmt.Printf("%s\t\t%s\t\t%s\t%s%s\n", Blue(o.method), Gray(status), Gray("not found"), tab(len("not found")), o.url)
 	}
-
-	if description, ok := StatusSuccess[o.statusCode]; ok {
-		fmt.Printf("%s\t\t%s\t\t%s\t%s%s\n", Blue(o.method), Green(s), Green(description), tab(len(description)), o.url)
-		return
-	}
-
-	if description, ok := StatusRedirection[o.statusCode]; ok {
-		fmt.Printf("%s\t\t%s\t\t%s\t%s%s\n", Blue(o.method), Yellow(s), Yellow(description), tab(len(description)), o.url)
-		return
-	}
-
-	if description, ok := StatusClientError[o.statusCode]; ok {
-		fmt.Printf("%s\t\t%s\t\t%s\t%s%s\n", Blue(o.method), Purple(s), Purple(description), tab(len(description)), o.url)
-		return
-	}
-
-	if description, ok := StatusServerError[o.statusCode]; ok {
-		fmt.Printf("%s\t\t%s\t\t%s\t%s%s\n", Blue(o.method), Red(s), Red(description), tab(len(description)), o.url)
-		return
-	}
-
-	fmt.Printf("%s\t\t%s\t\t%s\t%s%s\n", Blue(o.method), Gray(s), Gray("not found"), tab(len("not found")), o.url)
 }

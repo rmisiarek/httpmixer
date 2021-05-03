@@ -114,10 +114,11 @@ func (o *HttpMixerOptions) reprStatusFilter() string {
 }
 
 type HttpMixerResult struct {
-	statusCode int
-	url        string
-	method     string
-	location   string
+	statusCode       int
+	url              string
+	method           string
+	location         string
+	resolvedCategory *resolvedCategory
 }
 
 type HttpMixer struct {
@@ -179,7 +180,9 @@ func (h *HttpMixer) Start(f resultF) {
 	go func() {
 		defer outWG.Done()
 		for o := range outChannel {
-			_, found := resolveCategory(o.statusCode, h.options.statusFilter)
+			resolvedCategory, found := resolveCategory(o.statusCode, h.options.statusFilter)
+			o.resolvedCategory = &resolvedCategory
+			// fmt.Printf("%#v\n", m)
 			if found {
 				// fmt.Println(category, o.statusCode)
 				f(o)

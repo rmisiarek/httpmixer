@@ -9,14 +9,16 @@ import (
 func TestCategoryCache(t *testing.T) {
 	cache := newCategoryCache()
 
-	cache.set(200, SuccessCategory)
-	category, exist := cache.get(200)
+	cache.set(200, SuccessCategory, "description")
+	resolved, exist := cache.get(200)
 
-	assert.Equal(t, SuccessCategory, category)
+	assert.Equal(t, SuccessCategory, resolved.category)
+	assert.Equal(t, "description", resolved.description)
 	assert.Equal(t, true, exist)
 
-	category, exist = cache.get(404)
-	assert.Equal(t, UnknownCategory, category)
+	resolved, exist = cache.get(404)
+	assert.Equal(t, UnknownCategory, resolved.category)
+	assert.Equal(t, "---", resolved.description)
 	assert.Equal(t, false, exist)
 }
 
@@ -61,20 +63,21 @@ func TestResolveCategory(t *testing.T) {
 
 	for k, v := range want {
 		if k != 999 {
-			category, exist := resolveCategory(k, opts)
-			assert.Equal(t, v, category)
+			resolved, exist := resolveCategory(k, opts)
+			assert.Equal(t, v, resolved.category)
 			assert.Equal(t, true, exist)
 		} else {
 			// There is no such code, UnknownCategory should be returned
-			category, exist := resolveCategory(k, opts)
-			assert.Equal(t, v, category)
+			resolved, exist := resolveCategory(k, opts)
+			assert.Equal(t, v, resolved.category)
+			assert.Equal(t, "---", resolved.description)
 			assert.Equal(t, false, exist)
 		}
 	}
 
 	// As 200 code will be resolved second time, then cache should be used
-	category, exist := resolveCategory(200, opts)
-	assert.Equal(t, SuccessCategory, category)
+	resolved, exist := resolveCategory(200, opts)
+	assert.Equal(t, SuccessCategory, resolved.category)
 	assert.Equal(t, true, exist)
 
 	// Clear cache
@@ -92,12 +95,13 @@ func TestResolveCategory(t *testing.T) {
 	for k, v := range want {
 		if k == 200 {
 			// Only 200 code should be found
-			category, exist := resolveCategory(k, opts)
-			assert.Equal(t, v, category)
+			resolved, exist := resolveCategory(k, opts)
+			assert.Equal(t, v, resolved.category)
 			assert.Equal(t, true, exist)
 		} else {
-			category, exist := resolveCategory(k, opts)
-			assert.Equal(t, UnknownCategory, category)
+			resolved, exist := resolveCategory(k, opts)
+			assert.Equal(t, UnknownCategory, resolved.category)
+			assert.Equal(t, "---", resolved.description)
 			assert.Equal(t, false, exist)
 		}
 	}

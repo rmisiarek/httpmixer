@@ -185,7 +185,7 @@ func resolveCategory(statusCode int, filter *statusFilter) (resolvedCategory, bo
 
 	if *filter.showAll {
 		cache.set(statusCode, UnknownCategory, "---")
-		return resolvedCategory{category: UnknownCategory, description: "---"}, true
+		return resolvedCategory{category: UnknownCategory, description: "---"}, false
 	}
 
 	return resolvedCategory{category: UnknownCategory, description: "---"}, false

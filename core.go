@@ -37,6 +37,10 @@ type HttpMixerOptions struct {
 	statusFilter *statusFilter
 }
 
+type Summary map[string]map[string]int
+
+var summaryData = make(Summary)
+
 func (o *HttpMixerOptions) reprSource() string {
 	if *o.source == "" {
 		return Blue("source: ") + Green("stdin")
@@ -114,11 +118,12 @@ func (o *HttpMixerOptions) reprStatusFilter() string {
 }
 
 type HttpMixerResult struct {
-	statusCode       int
-	url              string
-	method           string
-	location         string
-	resolvedCategory *resolvedCategory
+	statusCode  int
+	url         string
+	method      string
+	location    string
+	description string
+	// resolvedCategory *resolvedCategory
 }
 
 type HttpMixer struct {
@@ -138,6 +143,8 @@ func NewHttpMixer(opts *HttpMixerOptions) *HttpMixer {
 type resultF func(result *HttpMixerResult)
 
 func (h *HttpMixer) Start(f resultF) {
+	start := time.Now()
+
 	outChannel := make(chan *HttpMixerResult)
 	feedChannel := make(chan *feedData)
 	outWG := &sync.WaitGroup{}
@@ -180,8 +187,8 @@ func (h *HttpMixer) Start(f resultF) {
 	go func() {
 		defer outWG.Done()
 		for o := range outChannel {
-			resolvedCategory, found := resolveCategory(o.statusCode, h.options.statusFilter)
-			o.resolvedCategory = &resolvedCategory
+			description, found := resolveCodeDescription(o.statusCode, h.options.statusFilter)
+			o.description = description
 			// fmt.Printf("%#v\n", m)
 			if found {
 				// fmt.Println(category, o.statusCode)
@@ -193,6 +200,7 @@ func (h *HttpMixer) Start(f resultF) {
 					}
 				}
 			}
+			aggregateSummary(o)
 		}
 	}()
 
@@ -205,6 +213,9 @@ func (h *HttpMixer) Start(f resultF) {
 		outputWriter.Flush()
 		outputFile.Close()
 	}
+
+	took := time.Since(start).Truncate(time.Second)
+	printSummary(summaryData, took)
 }
 
 func (h *HttpMixer) feed(feedChannel chan *feedData) {
@@ -287,4 +298,17 @@ func fileExists(filepath string) bool {
 	}
 
 	return !info.IsDir()
+}
+
+func aggregateSummary(result *HttpMixerResult) {
+	if _, exist := summaryData[result.method]; !exist {
+		summaryData[result.method] = make(map[string]int)
+	}
+
+	label := fmt.Sprintf("%d\t%s", result.statusCode, result.description)
+	if result.description == "" {
+		label = fmt.Sprintf("%d", result.statusCode)
+	}
+
+	summaryData[result.method][label]++
 }

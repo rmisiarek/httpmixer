@@ -92,38 +92,27 @@ var (
 	ServerErrorCodes   = _aggregateCodes(StatusServerError)
 )
 
-type Category int
-
 const (
-	InformationalCategory Category = iota
-	SuccessCategory
-	RedirectionCategory
-	ClientErrorCategory
-	ServerErrorCategory
-	UnknownCategory
+	InformationalCategory = "1"
+	SuccessCategory       = "2"
+	RedirectionCategory   = "3"
+	ClientErrorCategory   = "4"
+	ServerErrorCategory   = "5"
+	UnknownCategory       = "0"
 )
 
-// func (c Category) String() string {
-// 	return [...]string{"Informational", "Success", "Redirection", "Client Error", "Server Error", "Unknown"}[c]
-// }
-
-type resolvedCategory struct {
-	category    Category
-	description string
-}
-
 type categoryCache struct {
-	codes map[int]resolvedCategory
+	codes map[int]string
 	sync.Mutex
 }
 
 func newCategoryCache() *categoryCache {
 	return &categoryCache{
-		codes: make(map[int]resolvedCategory),
+		codes: make(map[int]string),
 	}
 }
 
-func (c *categoryCache) get(statusCode int) (resolvedCategory, bool) {
+func (c *categoryCache) get(statusCode int) (string, bool) {
 	c.Lock()
 	defer c.Unlock()
 
@@ -132,22 +121,19 @@ func (c *categoryCache) get(statusCode int) (resolvedCategory, bool) {
 		return category, true
 	}
 
-	return resolvedCategory{category: UnknownCategory, description: "---"}, false
+	return "", false
 }
 
-func (c *categoryCache) set(statusCode int, category Category, description string) {
+func (c *categoryCache) set(statusCode int, description string) {
 	c.Lock()
 	defer c.Unlock()
 
-	c.codes[statusCode] = resolvedCategory{
-		category:    category,
-		description: description,
-	}
+	c.codes[statusCode] = description
 }
 
 var cache = newCategoryCache()
 
-func resolveCategory(statusCode int, filter *statusFilter) (resolvedCategory, bool) {
+func resolveCodeDescription(statusCode int, filter *statusFilter) (string, bool) {
 	cat, exist := cache.get(statusCode)
 	if exist {
 		return cat, true
@@ -155,40 +141,40 @@ func resolveCategory(statusCode int, filter *statusFilter) (resolvedCategory, bo
 
 	if *filter.showAll && _inSlice(InformationalCodes, statusCode) || *filter.onlyInfo && _inSlice(InformationalCodes, statusCode) {
 		description := StatusInformational[statusCode]
-		cache.set(statusCode, InformationalCategory, description)
-		return resolvedCategory{category: InformationalCategory, description: description}, true
+		cache.set(statusCode, description)
+		return description, true
 	}
 
 	if *filter.showAll && _inSlice(SuccessCodes, statusCode) || *filter.onlySuccess && _inSlice(SuccessCodes, statusCode) {
 		description := StatusSuccess[statusCode]
-		cache.set(statusCode, SuccessCategory, description)
-		return resolvedCategory{category: SuccessCategory, description: description}, true
+		cache.set(statusCode, description)
+		return description, true
 	}
 
 	if *filter.showAll && _inSlice(RedirectionCodes, statusCode) {
 		description := StatusRedirection[statusCode]
-		cache.set(statusCode, RedirectionCategory, description)
-		return resolvedCategory{category: RedirectionCategory, description: description}, true
+		cache.set(statusCode, description)
+		return description, true
 	}
 
 	if *filter.showAll && _inSlice(ClientErrorCodes, statusCode) || *filter.onlyClientErr && _inSlice(ClientErrorCodes, statusCode) {
 		description := StatusClientError[statusCode]
-		cache.set(statusCode, ClientErrorCategory, description)
-		return resolvedCategory{category: ClientErrorCategory, description: description}, true
+		cache.set(statusCode, description)
+		return description, true
 	}
 
 	if *filter.showAll && _inSlice(ServerErrorCodes, statusCode) || *filter.onlyServerErr && _inSlice(ServerErrorCodes, statusCode) {
 		description := StatusServerError[statusCode]
-		cache.set(statusCode, ServerErrorCategory, description)
-		return resolvedCategory{category: ServerErrorCategory, description: description}, true
+		cache.set(statusCode, description)
+		return description, true
 	}
 
 	if *filter.showAll {
-		cache.set(statusCode, UnknownCategory, "---")
-		return resolvedCategory{category: UnknownCategory, description: "---"}, false
+		cache.set(statusCode, "")
+		return "", false
 	}
 
-	return resolvedCategory{category: UnknownCategory, description: "---"}, false
+	return "", false
 }
 
 func _aggregateCodes(m map[int]string) []int {

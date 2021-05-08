@@ -2,37 +2,60 @@ package main
 
 import (
 	"fmt"
-	"math"
 	"strconv"
-	"strings"
+	"time"
 )
 
-// TODO: find better way for this
-func tab(descriptionLen int) string {
-	maxLenOfDescription := 34
-	repeat := float64(maxLenOfDescription-descriptionLen) / float64(8)
-	if ((maxLenOfDescription - descriptionLen) % 8) >= 5 {
-		return strings.Repeat("\t", int(math.Ceil(repeat)))
-	}
-	return strings.Repeat("\t", int(math.Floor(repeat)))
-}
+var fmtBase = "%s\t\t%s\t%s"
+var fmtFinal = "%-70s\t%s\n"
+var fmtSummary = "%s\t%s\t%s\n"
 
 func printResult(o *HttpMixerResult) {
 	status := strconv.Itoa(o.statusCode)
-	description := o.resolvedCategory.description
+	description := o.description
 
-	switch o.resolvedCategory.category {
+	switch string(status[0]) {
 	case InformationalCategory:
-		fmt.Printf("%s\t\t%s\t\t%s\t%s%s\n", Blue(o.method), Blue(status), Blue(description), tab(len(description)), o.url)
+		p := fmt.Sprintf(fmtBase, Blue(o.method), Blue(status), Blue(description))
+		fmt.Printf(fmtFinal, p, White(o.url))
 	case SuccessCategory:
-		fmt.Printf("%s\t\t%s\t\t%s\t%s%s\n", Blue(o.method), Green(status), Green(description), tab(len(description)), o.url)
+		p := fmt.Sprintf(fmtBase, Blue(o.method), Green(status), Green(description))
+		fmt.Printf(fmtFinal, p, White(o.url))
 	case RedirectionCategory:
-		fmt.Printf("%s\t\t%s\t\t%s\t%s%s\n", Blue(o.method), Yellow(status), Yellow(description), tab(len(description)), o.url)
+		p := fmt.Sprintf(fmtBase, Blue(o.method), Yellow(status), Yellow(description))
+		fmt.Printf(fmtFinal, p, White(o.url))
 	case ClientErrorCategory:
-		fmt.Printf("%s\t\t%s\t\t%s\t%s%s\n", Blue(o.method), Purple(status), Purple(description), tab(len(description)), o.url)
+		p := fmt.Sprintf(fmtBase, Blue(o.method), Purple(status), Purple(description))
+		fmt.Printf(fmtFinal, p, White(o.url))
 	case ServerErrorCategory:
-		fmt.Printf("%s\t\t%s\t\t%s\t%s%s\n", Blue(o.method), Red(status), Red(description), tab(len(description)), o.url)
+		p := fmt.Sprintf(fmtBase, Blue(o.method), Red(status), Red(description))
+		fmt.Printf(fmtFinal, p, White(o.url))
 	default:
-		fmt.Printf("%s\t\t%s\t\t%s\t%s%s\n", Blue(o.method), Gray(status), Gray("not found"), tab(len("not found")), o.url)
+		p := fmt.Sprintf(fmtBase, Blue(o.method), Gray(status), Gray(description))
+		fmt.Printf(fmtFinal, p, White(o.url))
 	}
+}
+
+func printSummary(summary Summary, took time.Duration) {
+	fmt.Printf("\n\n")
+	for method, statuses := range summary {
+		for status, counter := range statuses {
+			coloredStatus := White(status)
+			switch string(status[0]) {
+			case InformationalCategory:
+				coloredStatus = Blue(status)
+			case SuccessCategory:
+				coloredStatus = Green(status)
+			case RedirectionCategory:
+				coloredStatus = Yellow(status)
+			case ClientErrorCategory:
+				coloredStatus = Purple(status)
+			case ServerErrorCategory:
+				coloredStatus = Red(status)
+			}
+			fmt.Printf(fmtSummary, Blue(method), Green(strconv.Itoa(counter)), coloredStatus)
+		}
+	}
+
+	fmt.Printf("\n%s\n", Gray(fmt.Sprintf(">> Done within %s", took)))
 }

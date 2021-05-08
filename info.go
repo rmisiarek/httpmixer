@@ -26,6 +26,6 @@ func printInfo(o *HttpMixerOptions) {
 	fmt.Printf(">> %s\n", o.reprTimeout())
 	fmt.Printf(">> %s\n", o.reprConcurenncy())
 	fmt.Printf(">> %s\n\n", o.reprStatusFilter())
-	fmt.Printf("%s\t\t%s\t%s\t%s%s\n", "METHOD", "STATUS CODE", "DESCRIPTION", "\t\t\t", "URL")
-	fmt.Printf("%s\t\t%s\t%s\t%s%s\n", "------", "-----------", "-----------", "\t\t\t", "---")
+	// fmt.Printf("%s\t\t%s\t%s\t%s%s\n", "METHOD", "STATUS CODE", "DESCRIPTION", "\t\t\t", "URL")
+	// fmt.Printf("%s\t\t%s\t%s\t%s%s\n", "------", "-----------", "-----------", "\t\t\t", "---")
 }

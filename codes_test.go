@@ -9,16 +9,14 @@ import (
 func TestCategoryCache(t *testing.T) {
 	cache := newCategoryCache()
 
-	cache.set(200, SuccessCategory, "description")
-	resolved, exist := cache.get(200)
+	cache.set(200, "description")
+	description, exist := cache.get(200)
 
-	assert.Equal(t, SuccessCategory, resolved.category)
-	assert.Equal(t, "description", resolved.description)
+	assert.Equal(t, "description", description)
 	assert.Equal(t, true, exist)
 
-	resolved, exist = cache.get(404)
-	assert.Equal(t, UnknownCategory, resolved.category)
-	assert.Equal(t, "---", resolved.description)
+	description, exist = cache.get(404)
+	assert.Equal(t, "", description)
 	assert.Equal(t, false, exist)
 }
 
@@ -39,7 +37,7 @@ func TestAggregateCodes(t *testing.T) {
 	assert.Equal(t, []int{1, 2, 3}, result)
 }
 
-func TestResolveCategory(t *testing.T) {
+func TestResolveCodeDescription(t *testing.T) {
 	_t := true
 	_f := false
 
@@ -52,32 +50,31 @@ func TestResolveCategory(t *testing.T) {
 		onlyServerErr: &_f,
 	}
 
-	want := map[int]Category{
-		100: InformationalCategory,
-		200: SuccessCategory,
-		300: RedirectionCategory,
-		400: ClientErrorCategory,
-		500: ServerErrorCategory,
-		999: UnknownCategory,
+	want := map[int]string{
+		100: "Continue",
+		200: "OK",
+		300: "Multiple Choices",
+		400: "Bad Request",
+		500: "Internal Server Error",
+		999: "No such code",
 	}
 
 	for k, v := range want {
 		if k != 999 {
-			resolved, exist := resolveCategory(k, opts)
-			assert.Equal(t, v, resolved.category)
+			description, exist := resolveCodeDescription(k, opts)
+			assert.Equal(t, v, description)
 			assert.Equal(t, true, exist)
 		} else {
 			// There is no such code, UnknownCategory should be returned
-			resolved, exist := resolveCategory(k, opts)
-			assert.Equal(t, v, resolved.category)
-			assert.Equal(t, "---", resolved.description)
+			description, exist := resolveCodeDescription(k, opts)
+			assert.Equal(t, "", description)
 			assert.Equal(t, false, exist)
 		}
 	}
 
 	// As 200 code will be resolved second time, then cache should be used
-	resolved, exist := resolveCategory(200, opts)
-	assert.Equal(t, SuccessCategory, resolved.category)
+	description, exist := resolveCodeDescription(200, opts)
+	assert.Equal(t, "OK", description)
 	assert.Equal(t, true, exist)
 
 	// Clear cache
@@ -95,13 +92,12 @@ func TestResolveCategory(t *testing.T) {
 	for k, v := range want {
 		if k == 200 {
 			// Only 200 code should be found
-			resolved, exist := resolveCategory(k, opts)
-			assert.Equal(t, v, resolved.category)
+			description, exist := resolveCodeDescription(k, opts)
+			assert.Equal(t, v, description)
 			assert.Equal(t, true, exist)
 		} else {
-			resolved, exist := resolveCategory(k, opts)
-			assert.Equal(t, UnknownCategory, resolved.category)
-			assert.Equal(t, "---", resolved.description)
+			description, exist := resolveCodeDescription(k, opts)
+			assert.Equal(t, "", description)
 			assert.Equal(t, false, exist)
 		}
 	}

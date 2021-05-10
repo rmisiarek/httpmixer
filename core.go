@@ -123,7 +123,6 @@ type HttpMixerResult struct {
 	method      string
 	location    string
 	description string
-	// resolvedCategory *resolvedCategory
 }
 
 type HttpMixer struct {
@@ -189,9 +188,7 @@ func (h *HttpMixer) Start(f resultF) {
 		for o := range outChannel {
 			description, found := resolveCodeDescription(o.statusCode, h.options.statusFilter)
 			o.description = description
-			// fmt.Printf("%#v\n", m)
 			if found {
-				// fmt.Println(category, o.statusCode)
 				f(o)
 				if saveOutput {
 					_, err := outputWriter.WriteString(o.url + "\n")
@@ -200,7 +197,7 @@ func (h *HttpMixer) Start(f resultF) {
 					}
 				}
 			}
-			aggregateSummary(o)
+			aggregateSummary(o, *h.options.statusFilter.showAll)
 		}
 	}()
 
@@ -298,17 +295,4 @@ func fileExists(filepath string) bool {
 	}
 
 	return !info.IsDir()
-}
-
-func aggregateSummary(result *HttpMixerResult) {
-	if _, exist := summaryData[result.method]; !exist {
-		summaryData[result.method] = make(map[string]int)
-	}
-
-	label := fmt.Sprintf("%d\t%s", result.statusCode, result.description)
-	if result.description == "" {
-		label = fmt.Sprintf("%d", result.statusCode)
-	}
-
-	summaryData[result.method][label]++
 }

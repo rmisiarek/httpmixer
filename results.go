@@ -8,7 +8,7 @@ import (
 
 var fmtBase = "%s\t\t%s\t%s"
 var fmtFinal = "%-70s\t%s\n"
-var fmtSummary = "%s\t%s\t%s\n"
+var fmtSummary = "%s\t\t%s\t%s\n"
 
 func printResult(o *HttpMixerResult) {
 	status := strconv.Itoa(o.statusCode)
@@ -36,8 +36,32 @@ func printResult(o *HttpMixerResult) {
 	}
 }
 
+func aggregateSummary(result *HttpMixerResult, showAll bool) {
+	if _, exist := summaryData[result.method]; !exist {
+		summaryData[result.method] = make(map[string]int)
+	}
+
+	label := ""
+	if showAll {
+		if result.description != "" {
+			label = fmt.Sprintf("%d\t%s", result.statusCode, result.description)
+		} else {
+			label = fmt.Sprintf("%d", result.statusCode)
+		}
+		summaryData[result.method][label]++
+	}
+
+	if !showAll {
+		if result.description != "" {
+			label = fmt.Sprintf("%d\t%s", result.statusCode, result.description)
+			summaryData[result.method][label]++
+		}
+	}
+}
+
 func printSummary(summary Summary, took time.Duration) {
-	fmt.Printf("\n\n")
+	fmt.Printf(fmtSummary, "\nMETHOD", "FOUND", "RESPONSE STATUS")
+	fmt.Printf(fmtSummary, "======", "=====", "===============")
 	for method, statuses := range summary {
 		for status, counter := range statuses {
 			coloredStatus := White(status)
@@ -57,5 +81,5 @@ func printSummary(summary Summary, took time.Duration) {
 		}
 	}
 
-	fmt.Printf("\n%s\n", Gray(fmt.Sprintf(">> Done within %s", took)))
+	fmt.Printf("\n>> %s %s\n", Blue("Done within:"), Green(took.String()))
 }

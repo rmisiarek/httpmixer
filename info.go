@@ -16,7 +16,7 @@ const title = `
 `
 
 func printInfo(o *HttpMixerOptions) {
-	fmt.Printf("%s\n", Cyan(title))
+	fmt.Printf("%s\n", Blue(title))
 	fmt.Printf(">> %s\n", o.reprSource())
 	fmt.Printf(">> %s\n", o.reprOutput())
 	fmt.Printf(">> %s\n", o.reprSkipHttps())
@@ -26,6 +26,6 @@ func printInfo(o *HttpMixerOptions) {
 	fmt.Printf(">> %s\n", o.reprTimeout())
 	fmt.Printf(">> %s\n", o.reprConcurenncy())
 	fmt.Printf(">> %s\n\n", o.reprStatusFilter())
-	// fmt.Printf("%s\t\t%s\t%s\t%s%s\n", "METHOD", "STATUS CODE", "DESCRIPTION", "\t\t\t", "URL")
-	// fmt.Printf("%s\t\t%s\t%s\t%s%s\n", "------", "-----------", "-----------", "\t\t\t", "---")
+	fmt.Printf("%s\t\t%s\t\t\t\t\t%s", "METHOD", "RESPONSE STATUS", "URL\n")
+	fmt.Printf("%s\t\t%s\t\t\t\t\t%s", "======", "===============", "===\n")
 }

@@ -38,16 +38,13 @@ func TestAggregateCodes(t *testing.T) {
 }
 
 func TestResolveCodeDescription(t *testing.T) {
-	_t := true
-	_f := false
-
 	// Options for filtering all categories
 	opts := &statusFilter{
-		showAll:       &_t,
-		onlyInfo:      &_f,
-		onlySuccess:   &_f,
-		onlyClientErr: &_f,
-		onlyServerErr: &_f,
+		showAll:       true,
+		onlyInfo:      false,
+		onlySuccess:   false,
+		onlyClientErr: false,
+		onlyServerErr: false,
 	}
 
 	want := map[int]string{
@@ -82,11 +79,11 @@ func TestResolveCodeDescription(t *testing.T) {
 
 	// Options for filtering only success category
 	opts = &statusFilter{
-		showAll:       &_f,
-		onlyInfo:      &_f,
-		onlySuccess:   &_t,
-		onlyClientErr: &_f,
-		onlyServerErr: &_f,
+		showAll:       false,
+		onlyInfo:      false,
+		onlySuccess:   true,
+		onlyClientErr: false,
+		onlyServerErr: false,
 	}
 
 	for k, v := range want {

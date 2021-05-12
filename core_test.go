@@ -15,9 +15,8 @@ import (
 )
 
 func TestNewHttpMixerStdinSource(t *testing.T) {
-	on := true
 	opts := mixerOptions()
-	opts.noRedirect = &on
+	opts.noRedirect = true
 
 	mixer := NewHttpMixer(&opts)
 
@@ -30,13 +29,13 @@ func TestNewHttpMixerStdinSource(t *testing.T) {
 	assert.Equal(t, time.Duration(5)*time.Second, mixer.client.client.Timeout)
 
 	// Test access to HttpMixerOptions values
-	assert.Equal(t, "", *mixer.options.source)
-	assert.Equal(t, 2, *mixer.options.concurrency)
-	assert.Equal(t, 5, *mixer.options.timeout)
-	assert.Equal(t, true, *mixer.options.noRedirect)
-	assert.Equal(t, false, *mixer.options.skipHttp)
-	assert.Equal(t, false, *mixer.options.skipHttps)
-	assert.Equal(t, true, *mixer.options.testTrace)
+	assert.Equal(t, "", mixer.options.source)
+	assert.Equal(t, 2, mixer.options.concurrency)
+	assert.Equal(t, 5, mixer.options.timeout)
+	assert.Equal(t, true, mixer.options.noRedirect)
+	assert.Equal(t, false, mixer.options.skipHttp)
+	assert.Equal(t, false, mixer.options.skipHttps)
+	assert.Equal(t, true, mixer.options.testTrace)
 }
 
 func TestNewHttpMixerFileSource(t *testing.T) {
@@ -47,7 +46,7 @@ func TestNewHttpMixerFileSource(t *testing.T) {
 	// Set temporary file to HttpMixerOptions
 	opts := mixerOptions()
 	source := tmpSourceFile.Name()
-	opts.source = &source
+	opts.source = source
 
 	// Success scenario - read from file
 	mixer := NewHttpMixer(&opts)
@@ -58,21 +57,20 @@ func TestNewHttpMixerFileSource(t *testing.T) {
 
 	// Failure scenario - there is no such file, should panic
 	source = "source-that-not-exist.txt"
-	opts.source = &source
+	opts.source = source
 	assert.Panics(t, func() { NewHttpMixer(&opts) })
 }
 
 func TestNewHttpMixerStatusFilter(t *testing.T) {
-	on := true
 	opts := mixerOptions()
 	m := NewHttpMixer(&opts)
-	assert.Equal(t, true, *m.options.statusFilter.showAll)
+	assert.Equal(t, true, m.options.statusFilter.showAll)
 
 	// When any of the filters is set to true, then showAll
 	// should be set to false, just to show only filtered results
-	opts.statusFilter.onlySuccess = &on
+	opts.statusFilter.onlySuccess = true
 	m = NewHttpMixer(&opts)
-	assert.Equal(t, false, *m.options.statusFilter.showAll)
+	assert.Equal(t, false, m.options.statusFilter.showAll)
 }
 
 func createTemporarySourceFile() *os.File {
@@ -89,9 +87,6 @@ func createTemporarySourceFile() *os.File {
 }
 
 func TestUrlsWthProtocols(t *testing.T) {
-	_true := true
-	_false := false
-
 	opts := mixerOptions()
 	mixer := NewHttpMixer(&opts)
 
@@ -108,7 +103,7 @@ func TestUrlsWthProtocols(t *testing.T) {
 	assert.Equal(t, expected, result)
 
 	// Three tests for https only
-	mixer.options.skipHttp = &_true
+	mixer.options.skipHttp = true
 
 	result = mixer.wthProtocols("http://www.example.com")
 	assert.Equal(t, []string{"https://www.example.com"}, result)
@@ -120,8 +115,8 @@ func TestUrlsWthProtocols(t *testing.T) {
 	assert.Equal(t, []string{"https://www.example.com"}, result)
 
 	// Three tests for http only
-	mixer.options.skipHttp = &_false
-	mixer.options.skipHttps = &_true
+	mixer.options.skipHttp = false
+	mixer.options.skipHttps = true
 
 	result = mixer.wthProtocols("http://www.example.com")
 	assert.Equal(t, []string{"http://www.example.com"}, result)
@@ -148,20 +143,18 @@ func TestHttpMixerOptionsRepr(t *testing.T) {
 
 	source := "/tmp/file.txt"
 	output := "/tmp/results.txt"
-	_true := true
-	_false := false
 
-	o.source = &source
-	o.output = &output
-	o.noRedirect = &_true
-	o.skipHttp = &_true
-	o.skipHttps = &_true
-	o.testTrace = &_false
-	o.statusFilter.showAll = &_false
-	o.statusFilter.onlyClientErr = &_true
-	o.statusFilter.onlyInfo = &_true
-	o.statusFilter.onlyServerErr = &_true
-	o.statusFilter.onlySuccess = &_true
+	o.source = source
+	o.output = output
+	o.noRedirect = true
+	o.skipHttp = true
+	o.skipHttps = true
+	o.testTrace = false
+	o.statusFilter.showAll = false
+	o.statusFilter.onlyClientErr = true
+	o.statusFilter.onlyInfo = true
+	o.statusFilter.onlyServerErr = true
+	o.statusFilter.onlySuccess = true
 
 	assert.Equal(t, Blue("source: ")+Green("/tmp/file.txt"), o.reprSource())
 	assert.Equal(t, Blue("output: ")+Green("/tmp/results.txt"), o.reprOutput())
@@ -219,22 +212,22 @@ func mixerOptions() HttpMixerOptions {
 	onlyServerErr := false
 
 	filter := statusFilter{
-		showAll:       &showAll,
-		onlyInfo:      &onlyInfo,
-		onlySuccess:   &onlySuccess,
-		onlyClientErr: &onlyClientErr,
-		onlyServerErr: &onlyServerErr,
+		showAll:       showAll,
+		onlyInfo:      onlyInfo,
+		onlySuccess:   onlySuccess,
+		onlyClientErr: onlyClientErr,
+		onlyServerErr: onlyServerErr,
 	}
 
 	opts := HttpMixerOptions{
-		source:       &source,
-		output:       &output,
-		concurrency:  &concurrency,
-		timeout:      &timeout,
-		noRedirect:   &redirect,
-		skipHttp:     &skipHttp,
-		skipHttps:    &skipHttps,
-		testTrace:    &testTrace,
+		source:       source,
+		output:       output,
+		concurrency:  concurrency,
+		timeout:      timeout,
+		noRedirect:   redirect,
+		skipHttp:     skipHttp,
+		skipHttps:    skipHttps,
+		testTrace:    testTrace,
 		statusFilter: &filter,
 	}
 

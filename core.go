@@ -18,22 +18,22 @@ type feedData struct {
 }
 
 type statusFilter struct {
-	showAll       *bool
-	onlyInfo      *bool
-	onlySuccess   *bool
-	onlyClientErr *bool
-	onlyServerErr *bool
+	showAll       bool
+	onlyInfo      bool
+	onlySuccess   bool
+	onlyClientErr bool
+	onlyServerErr bool
 }
 
 type HttpMixerOptions struct {
-	source       *string
-	output       *string
-	concurrency  *int
-	timeout      *int
-	noRedirect   *bool
-	skipHttp     *bool
-	skipHttps    *bool
-	testTrace    *bool
+	source       string
+	output       string
+	concurrency  int
+	timeout      int
+	noRedirect   bool
+	skipHttp     bool
+	skipHttps    bool
+	testTrace    bool
 	statusFilter *statusFilter
 }
 
@@ -42,29 +42,29 @@ type Summary map[string]map[string]int
 var summaryData = make(Summary)
 
 func (o *HttpMixerOptions) reprSource() string {
-	if *o.source == "" {
+	if o.source == "" {
 		return Blue("source: ") + Green("stdin")
 	}
-	return Blue("source: ") + Green(*o.source)
+	return Blue("source: ") + Green(o.source)
 }
 
 func (o *HttpMixerOptions) reprOutput() string {
-	if *o.output == "" {
+	if o.output == "" {
 		return Blue("output: ") + Green("stdout")
 	}
-	return Blue("output: ") + Green(*o.output)
+	return Blue("output: ") + Green(o.output)
 }
 
 func (o *HttpMixerOptions) reprConcurenncy() string {
-	return Blue("concurrency: ") + Green(strconv.Itoa(*o.concurrency))
+	return Blue("concurrency: ") + Green(strconv.Itoa(o.concurrency))
 }
 
 func (o *HttpMixerOptions) reprTimeout() string {
-	return Blue("timeout: ") + Green(strconv.Itoa(*o.timeout))
+	return Blue("timeout: ") + Green(strconv.Itoa(o.timeout))
 }
 
 func (o *HttpMixerOptions) reprRedirect() string {
-	if !*o.noRedirect {
+	if !o.noRedirect {
 		return Blue("redirect: ") + Green("on")
 	} else {
 		return Blue("redirect: ") + Red("off")
@@ -72,7 +72,7 @@ func (o *HttpMixerOptions) reprRedirect() string {
 }
 
 func (o *HttpMixerOptions) reprSkipHttp() string {
-	if *o.skipHttp {
+	if o.skipHttp {
 		return Blue("HTTP: ") + Red("off")
 	} else {
 		return Blue("HTTP: ") + Green("on")
@@ -80,7 +80,7 @@ func (o *HttpMixerOptions) reprSkipHttp() string {
 }
 
 func (o *HttpMixerOptions) reprSkipHttps() string {
-	if *o.skipHttps {
+	if o.skipHttps {
 		return Blue("HTTPS: ") + Red("off")
 	} else {
 		return Blue("HTTPS: ") + Green("on")
@@ -88,7 +88,7 @@ func (o *HttpMixerOptions) reprSkipHttps() string {
 }
 
 func (o *HttpMixerOptions) reprTestTrace() string {
-	if *o.testTrace {
+	if o.testTrace {
 		return Blue("trace: ") + Green("on")
 	} else {
 		return Blue("trace: ") + Red("off")
@@ -98,19 +98,19 @@ func (o *HttpMixerOptions) reprTestTrace() string {
 func (o *HttpMixerOptions) reprStatusFilter() string {
 	result := []string{}
 
-	if *o.statusFilter.showAll {
+	if o.statusFilter.showAll {
 		return Blue("filter: ") + Green("all")
 	}
-	if *o.statusFilter.onlyInfo {
+	if o.statusFilter.onlyInfo {
 		result = append(result, "info")
 	}
-	if *o.statusFilter.onlySuccess {
+	if o.statusFilter.onlySuccess {
 		result = append(result, "success")
 	}
-	if *o.statusFilter.onlyClientErr {
+	if o.statusFilter.onlyClientErr {
 		result = append(result, "client error")
 	}
-	if *o.statusFilter.onlyServerErr {
+	if o.statusFilter.onlyServerErr {
 		result = append(result, "server error")
 	}
 
@@ -132,20 +132,17 @@ type HttpMixer struct {
 }
 
 func NewHttpMixer(opts *HttpMixerOptions) *HttpMixer {
-	on := true
-	off := false
-
-	opts.statusFilter.showAll = &on
-	if *opts.statusFilter.onlyInfo ||
-		*opts.statusFilter.onlySuccess ||
-		*opts.statusFilter.onlyClientErr ||
-		*opts.statusFilter.onlyServerErr {
-		opts.statusFilter.showAll = &off
+	opts.statusFilter.showAll = true
+	if opts.statusFilter.onlyInfo ||
+		opts.statusFilter.onlySuccess ||
+		opts.statusFilter.onlyClientErr ||
+		opts.statusFilter.onlyServerErr {
+		opts.statusFilter.showAll = false
 	}
 
 	return &HttpMixer{
-		source:  openStdinOrFile(opts.source),
-		client:  getClient(opts.noRedirect, opts.timeout),
+		source:  openStdinOrFile(&opts.source),
+		client:  getClient(&opts.noRedirect, &opts.timeout),
 		options: opts,
 	}
 }
@@ -164,13 +161,13 @@ func (h *HttpMixer) Start(f resultF) {
 	var outputFile io.WriteCloser
 	var outputWriter *bufio.Writer
 
-	if *h.options.output != "" {
+	if h.options.output != "" {
 		saveOutput = true
-		outputFile = createFile(*h.options.output, 5)
+		outputFile = createFile(h.options.output, 5)
 		outputWriter = bufio.NewWriter(outputFile)
 	}
 
-	for i := 0; i < *h.options.concurrency; i++ {
+	for i := 0; i < h.options.concurrency; i++ {
 		feedWG.Add(1)
 		go func() {
 			for feed := range feedChannel {
@@ -208,7 +205,7 @@ func (h *HttpMixer) Start(f resultF) {
 					}
 				}
 			}
-			aggregateSummary(o, *h.options.statusFilter.showAll)
+			aggregateSummary(o, h.options.statusFilter.showAll)
 		}
 	}()
 
@@ -235,7 +232,7 @@ func (h *HttpMixer) feed(feedChannel chan *feedData) {
 				method: "GET",
 				url:    url,
 			}
-			if *h.options.testTrace {
+			if h.options.testTrace {
 				feedChannel <- &feedData{
 					method: "TRACE",
 					url:    url,
@@ -251,11 +248,11 @@ func (h *HttpMixer) wthProtocols(url string) []string {
 	url = strings.TrimPrefix(url, "https://")
 	url = strings.TrimPrefix(url, "http://")
 
-	if !*h.options.skipHttp {
+	if !h.options.skipHttp {
 		result = append(result, "http://"+url)
 	}
 
-	if !*h.options.skipHttps {
+	if !h.options.skipHttps {
 		result = append(result, "https://"+url)
 	}
 

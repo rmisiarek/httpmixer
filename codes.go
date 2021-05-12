@@ -139,37 +139,37 @@ func resolveCodeDescription(statusCode int, filter *statusFilter) (string, bool)
 		return cat, true
 	}
 
-	if *filter.showAll && _inSlice(InformationalCodes, statusCode) || *filter.onlyInfo && _inSlice(InformationalCodes, statusCode) {
+	if filter.showAll && _inSlice(InformationalCodes, statusCode) || filter.onlyInfo && _inSlice(InformationalCodes, statusCode) {
 		description := StatusInformational[statusCode]
 		cache.set(statusCode, description)
 		return description, true
 	}
 
-	if *filter.showAll && _inSlice(SuccessCodes, statusCode) || *filter.onlySuccess && _inSlice(SuccessCodes, statusCode) {
+	if filter.showAll && _inSlice(SuccessCodes, statusCode) || filter.onlySuccess && _inSlice(SuccessCodes, statusCode) {
 		description := StatusSuccess[statusCode]
 		cache.set(statusCode, description)
 		return description, true
 	}
 
-	if *filter.showAll && _inSlice(RedirectionCodes, statusCode) {
+	if filter.showAll && _inSlice(RedirectionCodes, statusCode) {
 		description := StatusRedirection[statusCode]
 		cache.set(statusCode, description)
 		return description, true
 	}
 
-	if *filter.showAll && _inSlice(ClientErrorCodes, statusCode) || *filter.onlyClientErr && _inSlice(ClientErrorCodes, statusCode) {
+	if filter.showAll && _inSlice(ClientErrorCodes, statusCode) || filter.onlyClientErr && _inSlice(ClientErrorCodes, statusCode) {
 		description := StatusClientError[statusCode]
 		cache.set(statusCode, description)
 		return description, true
 	}
 
-	if *filter.showAll && _inSlice(ServerErrorCodes, statusCode) || *filter.onlyServerErr && _inSlice(ServerErrorCodes, statusCode) {
+	if filter.showAll && _inSlice(ServerErrorCodes, statusCode) || filter.onlyServerErr && _inSlice(ServerErrorCodes, statusCode) {
 		description := StatusServerError[statusCode]
 		cache.set(statusCode, description)
 		return description, true
 	}
 
-	if *filter.showAll {
+	if filter.showAll {
 		cache.set(statusCode, "")
 		return "", false
 	}

@@ -20,11 +20,6 @@ func main() {
 
 	flag.Parse()
 
-	showAll := true
-	if *onlyInfo || *onlySuccess || *onlyClientErr || *onlyServerErr {
-		showAll = false
-	}
-
 	options := &HttpMixerOptions{
 		source:      source,
 		output:      output,
@@ -35,7 +30,6 @@ func main() {
 		skipHttps:   skipHttps,
 		testTrace:   testTrace,
 		statusFilter: &statusFilter{
-			showAll:       &showAll,
 			onlyInfo:      onlyInfo,
 			onlySuccess:   onlySuccess,
 			onlyClientErr: onlyClientErr,
@@ -47,8 +41,8 @@ func main() {
 	// 	fmt.Println(o)
 	// }
 
+	mixer := NewHttpMixer(options)
 	printInfo(options)
 
-	mixer := NewHttpMixer(options)
 	mixer.Start(printResult)
 }

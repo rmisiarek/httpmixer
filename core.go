@@ -132,6 +132,17 @@ type HttpMixer struct {
 }
 
 func NewHttpMixer(opts *HttpMixerOptions) *HttpMixer {
+	on := true
+	off := false
+
+	opts.statusFilter.showAll = &on
+	if *opts.statusFilter.onlyInfo ||
+		*opts.statusFilter.onlySuccess ||
+		*opts.statusFilter.onlyClientErr ||
+		*opts.statusFilter.onlyServerErr {
+		opts.statusFilter.showAll = &off
+	}
+
 	return &HttpMixer{
 		source:  openStdinOrFile(opts.source),
 		client:  getClient(opts.noRedirect, opts.timeout),

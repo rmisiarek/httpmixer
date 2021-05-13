@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"log"
 )
 
 func main() {
@@ -20,7 +21,11 @@ func main() {
 	flag.BoolVar(&options.statusFilter.onlyServerErr, "server-error", false, "Filter only server error statuses (default: false)")
 	flag.Parse()
 
-	mixer := NewHttpMixer(options)
+	mixer, err := NewHttpMixer(options)
+	if err != nil {
+		log.Fatalln(Red(err.Error()))
+	}
+
 	printInfo(options)
 	mixer.Start(printResult)
 }

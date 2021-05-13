@@ -131,7 +131,11 @@ type HttpMixer struct {
 	options *HttpMixerOptions
 }
 
-func NewHttpMixer(opts *HttpMixerOptions) *HttpMixer {
+func NewHttpMixer(opts *HttpMixerOptions) (*HttpMixer, error) {
+	if opts.source != "" && !fileExists(opts.source) {
+		return nil, fmt.Errorf("%s does not exist", opts.source)
+	}
+
 	opts.statusFilter.showAll = true
 	if opts.statusFilter.onlyInfo ||
 		opts.statusFilter.onlySuccess ||
@@ -144,7 +148,7 @@ func NewHttpMixer(opts *HttpMixerOptions) *HttpMixer {
 		source:  openStdinOrFile(&opts.source),
 		client:  getClient(&opts.noRedirect, &opts.timeout),
 		options: opts,
-	}
+	}, nil
 }
 
 type resultF func(result *HttpMixerResult)

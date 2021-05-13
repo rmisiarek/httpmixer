@@ -34,7 +34,9 @@ func TestAggregateCodes(t *testing.T) {
 	m := map[int]string{1: "test1", 2: "test2", 3: "test3"}
 
 	result := _aggregateCodes(m)
-	assert.Equal(t, []int{1, 2, 3}, result)
+	assert.Equal(t, true, _inSlice(result, 1))
+	assert.Equal(t, true, _inSlice(result, 2))
+	assert.Equal(t, true, _inSlice(result, 3))
 }
 
 func TestResolveCodeDescription(t *testing.T) {

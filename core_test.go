@@ -18,7 +18,7 @@ func TestNewHttpMixerStdinSource(t *testing.T) {
 	opts := mixerOptions()
 	opts.noRedirect = true
 
-	mixer := NewHttpMixer(&opts)
+	mixer, _ := NewHttpMixer(&opts)
 
 	// Test whether the function has been set correctly
 	f1 := noRedirectF(nil, nil)
@@ -49,27 +49,29 @@ func TestNewHttpMixerFileSource(t *testing.T) {
 	opts.source = source
 
 	// Success scenario - read from file
-	mixer := NewHttpMixer(&opts)
+	mixer, _ := NewHttpMixer(&opts)
 	scanner := bufio.NewScanner(mixer.source)
 	for scanner.Scan() {
 		assert.Equal(t, "www.google.com", scanner.Text())
 	}
 
-	// Failure scenario - there is no such file, should panic
+	// Failure scenario - there is no such file, should return err
 	source = "source-that-not-exist.txt"
 	opts.source = source
-	assert.Panics(t, func() { NewHttpMixer(&opts) })
+	mixer, err := NewHttpMixer(&opts)
+	assert.Nil(t, mixer)
+	assert.NotNil(t, err)
 }
 
 func TestNewHttpMixerStatusFilter(t *testing.T) {
 	opts := mixerOptions()
-	m := NewHttpMixer(&opts)
+	m, _ := NewHttpMixer(&opts)
 	assert.Equal(t, true, m.options.statusFilter.showAll)
 
 	// When any of the filters is set to true, then showAll
 	// should be set to false, just to show only filtered results
 	opts.statusFilter.onlySuccess = true
-	m = NewHttpMixer(&opts)
+	m, _ = NewHttpMixer(&opts)
 	assert.Equal(t, false, m.options.statusFilter.showAll)
 }
 
@@ -88,7 +90,7 @@ func createTemporarySourceFile() *os.File {
 
 func TestUrlsWthProtocols(t *testing.T) {
 	opts := mixerOptions()
-	mixer := NewHttpMixer(&opts)
+	mixer, _ := NewHttpMixer(&opts)
 
 	expected := []string{"http://www.example.com", "https://www.example.com"}
 

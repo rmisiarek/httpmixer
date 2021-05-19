@@ -124,6 +124,7 @@ func TestHttpMixerOptionsRepr(t *testing.T) {
 	assert.Equal(t, Blue("output: ")+Green("stdout"), o.reprOutput())
 	assert.Equal(t, Blue("concurrency: ")+Green(strconv.Itoa(2)), o.reprConcurenncy())
 	assert.Equal(t, Blue("timeout: ")+Green(strconv.Itoa(5)), o.reprTimeout())
+	assert.Equal(t, Blue("pipe: ")+Red("off"), o.reprPipe())
 	assert.Equal(t, Blue("redirect: ")+Green("on"), o.reprRedirect())
 	assert.Equal(t, Blue("HTTP: ")+Green("on"), o.reprSkipHttp())
 	assert.Equal(t, Blue("HTTPS: ")+Green("on"), o.reprSkipHttps())
@@ -135,6 +136,7 @@ func TestHttpMixerOptionsRepr(t *testing.T) {
 
 	o.source = source
 	o.output = output
+	o.pipe = true
 	o.noRedirect = true
 	o.skipHttp = true
 	o.skipHttps = true
@@ -147,6 +149,7 @@ func TestHttpMixerOptionsRepr(t *testing.T) {
 
 	assert.Equal(t, Blue("source: ")+Green("/tmp/file.txt"), o.reprSource())
 	assert.Equal(t, Blue("output: ")+Green("/tmp/results.txt"), o.reprOutput())
+	assert.Equal(t, Blue("pipe: ")+Green("on"), o.reprPipe())
 	assert.Equal(t, Blue("redirect: ")+Red("off"), o.reprRedirect())
 	assert.Equal(t, Blue("HTTP: ")+Red("off"), o.reprSkipHttp())
 	assert.Equal(t, Blue("HTTPS: ")+Red("off"), o.reprSkipHttps())

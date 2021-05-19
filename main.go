@@ -11,6 +11,7 @@ func main() {
 	flag.StringVar(&options.output, "output", "", "Path to output file (default: stdout)")
 	flag.IntVar(&options.concurrency, "concurrency", 100, "Concurrency level (defaqqqqult: 100)")
 	flag.IntVar(&options.timeout, "timeout", 30, "Timeout in seconds (default: 30s)")
+	flag.BoolVar(&options.pipe, "pipe", false, "Show only filtered URL's (default: false)")
 	flag.BoolVar(&options.noRedirect, "no-redirect", false, "Don't follow redirections (default: false)")
 	flag.BoolVar(&options.skipHttp, "skip-http", false, "Skip testing HTTP protocol (default: false)")
 	flag.BoolVar(&options.skipHttps, "skip-https", false, "Skip testing HTTPS protocol (default: false)")

@@ -16,12 +16,17 @@ const title = `
 `
 
 func printInfo(o *HttpMixerOptions) {
+	if o.pipe {
+		return
+	}
+
 	fmt.Printf("%s\n", Blue(title))
 	fmt.Printf(">> %s\n", o.reprSource())
 	fmt.Printf(">> %s\n", o.reprOutput())
 	fmt.Printf(">> %s\n", o.reprSkipHttps())
 	fmt.Printf(">> %s\n", o.reprSkipHttp())
 	fmt.Printf(">> %s\n", o.reprTestTrace())
+	fmt.Printf(">> %s\n", o.reprPipe())
 	fmt.Printf(">> %s\n", o.reprRedirect())
 	fmt.Printf(">> %s\n", o.reprTimeout())
 	fmt.Printf(">> %s\n", o.reprConcurenncy())

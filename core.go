@@ -31,6 +31,7 @@ type HttpMixerOptions struct {
 	output       string
 	concurrency  int
 	timeout      int
+	pipe         bool
 	noRedirect   bool
 	skipHttp     bool
 	skipHttps    bool
@@ -62,6 +63,14 @@ func (o *HttpMixerOptions) reprConcurenncy() string {
 
 func (o *HttpMixerOptions) reprTimeout() string {
 	return Blue("timeout: ") + Green(strconv.Itoa(o.timeout))
+}
+
+func (o *HttpMixerOptions) reprPipe() string {
+	if o.pipe {
+		return Blue("pipe: ") + Green("on")
+	} else {
+		return Blue("pipe: ") + Red("off")
+	}
 }
 
 func (o *HttpMixerOptions) reprRedirect() string {
@@ -200,6 +209,12 @@ func (h *HttpMixer) Start(f resultF) {
 		close(outChannel)
 	}()
 
+	if h.options.pipe {
+		f = func(result *HttpMixerResult) {
+			fmt.Println(result.url)
+		}
+	}
+
 	outWG.Add(1)
 	go func() {
 		defer outWG.Done()
@@ -215,7 +230,9 @@ func (h *HttpMixer) Start(f resultF) {
 					}
 				}
 			}
-			aggregateSummary(o, h.options.statusFilter.showAll)
+			if !h.options.pipe {
+				aggregateSummary(o, h.options.statusFilter.showAll)
+			}
 		}
 	}()
 
@@ -230,7 +247,10 @@ func (h *HttpMixer) Start(f resultF) {
 	}
 
 	took := time.Since(start).Truncate(time.Second)
-	printSummary(summaryData, took)
+
+	if !h.options.pipe {
+		printSummary(summaryData, took)
+	}
 }
 
 func (h *HttpMixer) feed(feedChannel chan *feedData) {

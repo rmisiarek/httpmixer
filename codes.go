@@ -197,3 +197,12 @@ func _inSlice(s []int, v int) bool {
 	}
 	return false
 }
+
+func _inSliceString(s []string, v string) bool {
+	for _, a := range s {
+		if a == v {
+			return true
+		}
+	}
+	return false
+}

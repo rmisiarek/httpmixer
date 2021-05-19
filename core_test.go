@@ -75,19 +75,6 @@ func TestNewHttpMixerStatusFilter(t *testing.T) {
 	assert.Equal(t, false, m.options.statusFilter.showAll)
 }
 
-func createTemporarySourceFile() *os.File {
-	tmpFile, err := ioutil.TempFile(".", "tmp-*-source.txt")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	if _, err = tmpFile.Write([]byte("www.google.com")); err != nil {
-		log.Fatal(err)
-	}
-
-	return tmpFile
-}
-
 func TestUrlsWthProtocols(t *testing.T) {
 	opts := mixerOptions()
 	mixer, _ := NewHttpMixer(&opts)
@@ -141,7 +128,7 @@ func TestHttpMixerOptionsRepr(t *testing.T) {
 	assert.Equal(t, Blue("HTTP: ")+Green("on"), o.reprSkipHttp())
 	assert.Equal(t, Blue("HTTPS: ")+Green("on"), o.reprSkipHttps())
 	assert.Equal(t, Blue("trace: ")+Green("on"), o.reprTestTrace())
-	// assert.Equal(t, Blue("filter: ")+Green("all"), o.reprStatusFilter())
+	assert.Equal(t, Blue("filter: ")+Green("all"), o.reprStatusFilter())
 
 	source := "/tmp/file.txt"
 	output := "/tmp/results.txt"
@@ -165,6 +152,40 @@ func TestHttpMixerOptionsRepr(t *testing.T) {
 	assert.Equal(t, Blue("HTTPS: ")+Red("off"), o.reprSkipHttps())
 	assert.Equal(t, Blue("trace: ")+Red("off"), o.reprTestTrace())
 	assert.Equal(t, Blue("filter: ")+Green("info, success, client error, server error"), o.reprStatusFilter())
+}
+
+func TestOpenStdinOrFile(t *testing.T) {
+	reader, err := openStdinOrFile("no-such-thing")
+	assert.Nil(t, reader)
+	assert.NotNil(t, err)
+
+	file, err := ioutil.TempFile(".", "tmp-*-file.txt")
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer os.Remove(file.Name())
+
+	reader, err = openStdinOrFile(file.Name())
+	assert.NotNil(t, reader)
+	assert.Nil(t, err)
+}
+
+func TestSourceFromSlice(t *testing.T) {
+	source := []string{"source1", "source2"}
+
+	options := &HttpMixerOptions{
+		statusFilter: &statusFilter{},
+	}
+
+	mixer, err := NewHttpMixer(options)
+	assert.Nil(t, err)
+
+	mixer.sourceFromSlice(source)
+
+	scanner := bufio.NewScanner(mixer.source)
+	for scanner.Scan() {
+		assert.Equal(t, true, _inSliceString(source, scanner.Text()))
+	}
 }
 
 func TestCreateFile(t *testing.T) {
@@ -196,6 +217,19 @@ func TestFileExists(t *testing.T) {
 	file, _ := ioutil.TempFile("/tmp", "*.txt")
 	exist = fileExists(file.Name())
 	assert.Equal(t, true, exist)
+}
+
+func createTemporarySourceFile() *os.File {
+	file, err := ioutil.TempFile(".", "tmp-*-source.txt")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if _, err = file.Write([]byte("www.google.com")); err != nil {
+		log.Fatal(err)
+	}
+
+	return file
 }
 
 func mixerOptions() HttpMixerOptions {

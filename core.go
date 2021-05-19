@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"os"
 	"strconv"
@@ -136,6 +137,11 @@ func NewHttpMixer(opts *HttpMixerOptions) (*HttpMixer, error) {
 		return nil, fmt.Errorf("%s does not exist", opts.source)
 	}
 
+	source, err := openStdinOrFile(opts.source)
+	if err != nil {
+		return nil, fmt.Errorf("error while opening %s", opts.source)
+	}
+
 	opts.statusFilter.showAll = true
 	if opts.statusFilter.onlyInfo ||
 		opts.statusFilter.onlySuccess ||
@@ -145,7 +151,7 @@ func NewHttpMixer(opts *HttpMixerOptions) (*HttpMixer, error) {
 	}
 
 	return &HttpMixer{
-		source:  openStdinOrFile(&opts.source),
+		source:  source,
 		client:  getClient(&opts.noRedirect, &opts.timeout),
 		options: opts,
 	}, nil
@@ -228,6 +234,8 @@ func (h *HttpMixer) Start(f resultF) {
 }
 
 func (h *HttpMixer) feed(feedChannel chan *feedData) {
+	defer h.source.Close()
+
 	scanner := bufio.NewScanner(h.source)
 	for scanner.Scan() {
 		urls := h.wthProtocols(scanner.Text())
@@ -244,6 +252,10 @@ func (h *HttpMixer) feed(feedChannel chan *feedData) {
 			}
 		}
 	}
+}
+
+func (h *HttpMixer) sourceFromSlice(s []string) {
+	h.source = ioutil.NopCloser(strings.NewReader(strings.Join(s, "\n")))
 }
 
 func (h *HttpMixer) wthProtocols(url string) []string {
@@ -263,23 +275,28 @@ func (h *HttpMixer) wthProtocols(url string) []string {
 	return result
 }
 
-func openStdinOrFile(inputs *string) io.ReadCloser {
+func openStdinOrFile(inputs string) (io.ReadCloser, error) {
 	r := os.Stdin
 
-	if *inputs != "" {
-		r = openFile(*inputs)
+	if inputs != "" {
+		var err error
+
+		r, err = openFile(inputs)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	return r
+	return r, nil
 }
 
-func openFile(filepath string) *os.File {
+func openFile(filepath string) (*os.File, error) {
 	file, err := os.Open(filepath)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	return file
+	return file, nil
 }
 
 func createFile(filepath string, sleepSec int) *os.File {

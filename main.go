@@ -26,6 +26,11 @@ func main() {
 		log.Fatalln(Red(err.Error()))
 	}
 
+	// src := []string{
+	// 	"google.com", "golang.org",
+	// }
+	// mixer.sourceFromSlice(src)
+
 	printInfo(options)
 	mixer.Start(printResult)
 }

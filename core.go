@@ -6,7 +6,6 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
-	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -24,6 +23,26 @@ type statusFilter struct {
 	onlySuccess   bool
 	onlyClientErr bool
 	onlyServerErr bool
+	// onlySelected  bool
+	selected selectedCodes
+}
+
+type selectedCodes []int
+
+func (sc *selectedCodes) String() string {
+	return fmt.Sprintln(*sc)
+}
+
+func (sc *selectedCodes) Set(value string) error {
+	for _, code := range strings.Split(value, ",") {
+		c, err := strconv.Atoi(code)
+		if err != nil {
+			continue
+		}
+		*sc = append(*sc, c)
+	}
+
+	return nil
 }
 
 type HttpMixerOptions struct {
@@ -109,7 +128,7 @@ func (o *HttpMixerOptions) reprStatusFilter() string {
 	result := []string{}
 
 	if o.statusFilter.showAll {
-		return Blue("filter: ") + Green("all")
+		result = append(result, "all")
 	}
 	if o.statusFilter.onlyInfo {
 		result = append(result, "info")
@@ -122,6 +141,10 @@ func (o *HttpMixerOptions) reprStatusFilter() string {
 	}
 	if o.statusFilter.onlyServerErr {
 		result = append(result, "server error")
+	}
+	if len(o.statusFilter.selected) > 0 {
+		s := fmt.Sprintf("selected: %s", intArrayToString(o.statusFilter.selected))
+		result = append(result, s)
 	}
 
 	return Blue("filter: ") + Green(strings.Join(result, ", "))
@@ -219,17 +242,23 @@ func (h *HttpMixer) Start(f resultF) {
 	go func() {
 		defer outWG.Done()
 		for o := range outChannel {
-			description, found := resolveCodeDescription(o.statusCode, h.options.statusFilter)
-			o.description = description
-			if found {
-				f(o)
-				if saveOutput {
-					_, err := outputWriter.WriteString(o.url + "\n")
-					if err != nil {
-						log.Fatalf("error while writing to a file: %s", err.Error())
-					}
+			o.description = resolveCodeDescription(o.statusCode, h.options.statusFilter)
+
+			if len(h.options.statusFilter.selected) > 0 {
+				if !intSliceContains(h.options.statusFilter.selected, o.statusCode) {
+					continue
 				}
 			}
+
+			f(o)
+
+			if saveOutput {
+				_, err := outputWriter.WriteString(o.url + "\n")
+				if err != nil {
+					log.Fatalf("error while writing to a file: %s", err.Error())
+				}
+			}
+
 			if !h.options.pipe {
 				aggregateSummary(o, h.options.statusFilter.showAll)
 			}
@@ -293,55 +322,4 @@ func (h *HttpMixer) wthProtocols(url string) []string {
 	}
 
 	return result
-}
-
-func openStdinOrFile(inputs string) (io.ReadCloser, error) {
-	r := os.Stdin
-
-	if inputs != "" {
-		var err error
-
-		r, err = openFile(inputs)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return r, nil
-}
-
-func openFile(filepath string) (*os.File, error) {
-	file, err := os.Open(filepath)
-	if err != nil {
-		return nil, err
-	}
-
-	return file, nil
-}
-
-func createFile(filepath string, sleepSec int) *os.File {
-	exist := fileExists(filepath)
-	if exist {
-		log.Println(Red(fmt.Sprintf(
-			">> %s exists and will be overwritten. Are you sure? %d seconds to GO\n",
-			filepath, sleepSec,
-		)))
-		time.Sleep(time.Duration(sleepSec) * time.Second)
-	}
-
-	file, err := os.Create(filepath)
-	if err != nil {
-		panic(err)
-	}
-
-	return file
-}
-
-func fileExists(filepath string) bool {
-	info, err := os.Stat(filepath)
-	if os.IsNotExist(err) {
-		return false
-	}
-
-	return !info.IsDir()
 }

@@ -133,48 +133,51 @@ func (c *categoryCache) set(statusCode int, description string) {
 
 var cache = newCategoryCache()
 
-func resolveCodeDescription(statusCode int, filter *statusFilter) (string, bool) {
+func resolveCodeDescription(statusCode int, filter *statusFilter) string {
 	cat, exist := cache.get(statusCode)
 	if exist {
-		return cat, true
+		return cat
 	}
 
-	if filter.showAll && _inSlice(InformationalCodes, statusCode) || filter.onlyInfo && _inSlice(InformationalCodes, statusCode) {
+	if filter.showAll && intSliceContains(InformationalCodes, statusCode) ||
+		filter.onlyInfo && intSliceContains(InformationalCodes, statusCode) {
 		description := StatusInformational[statusCode]
 		cache.set(statusCode, description)
-		return description, true
+		return description
 	}
 
-	if filter.showAll && _inSlice(SuccessCodes, statusCode) || filter.onlySuccess && _inSlice(SuccessCodes, statusCode) {
+	if filter.showAll && intSliceContains(SuccessCodes, statusCode) ||
+		filter.onlySuccess && intSliceContains(SuccessCodes, statusCode) {
 		description := StatusSuccess[statusCode]
 		cache.set(statusCode, description)
-		return description, true
+		return description
 	}
 
-	if filter.showAll && _inSlice(RedirectionCodes, statusCode) {
+	if filter.showAll && intSliceContains(RedirectionCodes, statusCode) {
 		description := StatusRedirection[statusCode]
 		cache.set(statusCode, description)
-		return description, true
+		return description
 	}
 
-	if filter.showAll && _inSlice(ClientErrorCodes, statusCode) || filter.onlyClientErr && _inSlice(ClientErrorCodes, statusCode) {
+	if filter.showAll && intSliceContains(ClientErrorCodes, statusCode) ||
+		filter.onlyClientErr && intSliceContains(ClientErrorCodes, statusCode) {
 		description := StatusClientError[statusCode]
 		cache.set(statusCode, description)
-		return description, true
+		return description
 	}
 
-	if filter.showAll && _inSlice(ServerErrorCodes, statusCode) || filter.onlyServerErr && _inSlice(ServerErrorCodes, statusCode) {
+	if filter.showAll && intSliceContains(ServerErrorCodes, statusCode) ||
+		filter.onlyServerErr && intSliceContains(ServerErrorCodes, statusCode) {
 		description := StatusServerError[statusCode]
 		cache.set(statusCode, description)
-		return description, true
+		return description
 	}
 
 	if filter.showAll {
-		cache.set(statusCode, "")
-		return "", false
+		cache.set(statusCode, "N/A")
 	}
 
-	return "", false
+	return "N/A"
 }
 
 func _aggregateCodes(m map[int]string) []int {
@@ -187,22 +190,4 @@ func _aggregateCodes(m map[int]string) []int {
 	}
 
 	return keys
-}
-
-func _inSlice(s []int, v int) bool {
-	for _, a := range s {
-		if a == v {
-			return true
-		}
-	}
-	return false
-}
-
-func _inSliceString(s []string, v string) bool {
-	for _, a := range s {
-		if a == v {
-			return true
-		}
-	}
-	return false
 }

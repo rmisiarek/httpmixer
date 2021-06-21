@@ -187,7 +187,7 @@ func TestSourceFromSlice(t *testing.T) {
 
 	scanner := bufio.NewScanner(mixer.source)
 	for scanner.Scan() {
-		assert.Equal(t, true, _inSliceString(source, scanner.Text()))
+		assert.Equal(t, true, stringSliceContains(source, scanner.Text()))
 	}
 }
 

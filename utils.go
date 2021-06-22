@@ -40,6 +40,18 @@ func intArrayToString(a []int) string {
 	return strings.Join(b, ",")
 }
 
+func intKeysToSlice(m map[int]string) []int {
+	keys := make([]int, len(m))
+
+	i := 0
+	for k := range m {
+		keys[i] = k
+		i++
+	}
+
+	return keys
+}
+
 func openStdinOrFile(inputs string) (io.ReadCloser, error) {
 	r := os.Stdin
 

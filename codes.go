@@ -85,11 +85,11 @@ var StatusServerError = map[int]string{
 }
 
 var (
-	InformationalCodes = _aggregateCodes(StatusInformational)
-	SuccessCodes       = _aggregateCodes(StatusSuccess)
-	RedirectionCodes   = _aggregateCodes(StatusRedirection)
-	ClientErrorCodes   = _aggregateCodes(StatusClientError)
-	ServerErrorCodes   = _aggregateCodes(StatusServerError)
+	InformationalCodes = intKeysToSlice(StatusInformational)
+	SuccessCodes       = intKeysToSlice(StatusSuccess)
+	RedirectionCodes   = intKeysToSlice(StatusRedirection)
+	ClientErrorCodes   = intKeysToSlice(StatusClientError)
+	ServerErrorCodes   = intKeysToSlice(StatusServerError)
 )
 
 const (
@@ -178,16 +178,4 @@ func resolveCodeDescription(statusCode int, filter *statusFilter) string {
 	}
 
 	return "N/A"
-}
-
-func _aggregateCodes(m map[int]string) []int {
-	keys := make([]int, len(m))
-
-	i := 0
-	for k := range m {
-		keys[i] = k
-		i++
-	}
-
-	return keys
 }

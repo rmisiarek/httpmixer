@@ -162,6 +162,7 @@ type HttpMixer struct {
 	source  io.ReadCloser
 	client  *HttpClient
 	options *HttpMixerOptions
+	output  resultF
 }
 
 func NewHttpMixer(opts *HttpMixerOptions) (*HttpMixer, error) {
@@ -186,12 +187,13 @@ func NewHttpMixer(opts *HttpMixerOptions) (*HttpMixer, error) {
 		source:  source,
 		client:  getClient(&opts.noRedirect, &opts.timeout),
 		options: opts,
+		output:  printResult,
 	}, nil
 }
 
 type resultF func(result *HttpMixerResult)
 
-func (h *HttpMixer) Start(f resultF) {
+func (h *HttpMixer) Start() {
 	start := time.Now()
 
 	outChannel := make(chan *HttpMixerResult)
@@ -233,7 +235,7 @@ func (h *HttpMixer) Start(f resultF) {
 	}()
 
 	if h.options.pipe {
-		f = func(result *HttpMixerResult) {
+		h.output = func(result *HttpMixerResult) {
 			fmt.Println(result.url)
 		}
 	}
@@ -250,7 +252,7 @@ func (h *HttpMixer) Start(f resultF) {
 				}
 			}
 
-			f(o)
+			h.output(o)
 
 			if saveOutput {
 				_, err := outputWriter.WriteString(o.url + "\n")

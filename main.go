@@ -34,5 +34,5 @@ func main() {
 	// mixer.sourceFromSlice(src)
 
 	printInfo(options)
-	mixer.Start(printResult)
+	mixer.Start()
 }

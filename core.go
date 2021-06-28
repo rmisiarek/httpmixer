@@ -244,6 +244,7 @@ func (h *HttpMixer) Start() {
 		defer outWG.Done()
 		for o := range outChannel {
 			o.description = resolveCodeDescription(o.statusCode, h.options.statusFilter)
+			o.url = strings.TrimRight(o.url, "/")
 
 			if len(h.options.statusFilter.selected) > 0 {
 				if !intSliceContains(h.options.statusFilter.selected, o.statusCode) {

@@ -17,17 +17,16 @@ type feedData struct {
 	url    string
 }
 
+type selectedCodes []int
+
 type statusFilter struct {
 	showAll       bool
 	onlyInfo      bool
 	onlySuccess   bool
 	onlyClientErr bool
 	onlyServerErr bool
-	// onlySelected  bool
-	selected selectedCodes
+	selected      selectedCodes
 }
-
-type selectedCodes []int
 
 func (sc *selectedCodes) String() string {
 	return fmt.Sprintln(*sc)
@@ -56,6 +55,32 @@ type HttpMixerOptions struct {
 	skipHttps    bool
 	testTrace    bool
 	statusFilter *statusFilter
+}
+
+func NewHttpMixer(opts *HttpMixerOptions) (*HttpMixer, error) {
+	if opts.source != "" && !fileExists(opts.source) {
+		return nil, fmt.Errorf("%s does not exist", opts.source)
+	}
+
+	source, err := openStdinOrFile(opts.source)
+	if err != nil {
+		return nil, fmt.Errorf("error while opening %s", opts.source)
+	}
+
+	opts.statusFilter.showAll = true
+	if opts.statusFilter.onlyInfo ||
+		opts.statusFilter.onlySuccess ||
+		opts.statusFilter.onlyClientErr ||
+		opts.statusFilter.onlyServerErr {
+		opts.statusFilter.showAll = false
+	}
+
+	return &HttpMixer{
+		source:  source,
+		client:  getClient(&opts.noRedirect, &opts.timeout),
+		options: opts,
+		output:  printResult,
+	}, nil
 }
 
 type Summary map[string]map[string]int
@@ -158,40 +183,14 @@ type HttpMixerResult struct {
 	description string
 }
 
+type resultsFunc func(result *HttpMixerResult)
+
 type HttpMixer struct {
 	source  io.ReadCloser
 	client  *HttpClient
 	options *HttpMixerOptions
-	output  resultF
+	output  resultsFunc
 }
-
-func NewHttpMixer(opts *HttpMixerOptions) (*HttpMixer, error) {
-	if opts.source != "" && !fileExists(opts.source) {
-		return nil, fmt.Errorf("%s does not exist", opts.source)
-	}
-
-	source, err := openStdinOrFile(opts.source)
-	if err != nil {
-		return nil, fmt.Errorf("error while opening %s", opts.source)
-	}
-
-	opts.statusFilter.showAll = true
-	if opts.statusFilter.onlyInfo ||
-		opts.statusFilter.onlySuccess ||
-		opts.statusFilter.onlyClientErr ||
-		opts.statusFilter.onlyServerErr {
-		opts.statusFilter.showAll = false
-	}
-
-	return &HttpMixer{
-		source:  source,
-		client:  getClient(&opts.noRedirect, &opts.timeout),
-		options: opts,
-		output:  printResult,
-	}, nil
-}
-
-type resultF func(result *HttpMixerResult)
 
 func (h *HttpMixer) Start() {
 	start := time.Now()
@@ -305,10 +304,21 @@ func (h *HttpMixer) feed(feedChannel chan *feedData) {
 	}
 }
 
-func (h *HttpMixer) sourceFromSlice(s []string) {
+// setSource sets slice of strings (s) as source. The previous
+// source will be closed.
+func (h *HttpMixer) setSource(s []string) {
+	h.source.Close()
 	h.source = ioutil.NopCloser(strings.NewReader(strings.Join(s, "\n")))
 }
 
+// setOutputFunc sets custom function (f) which will be responsible
+// for handling results included in HttpMixerResult.
+func (h *HttpMixer) setOutputFunc(f resultsFunc) {
+	h.output = f
+}
+
+// wthProtocols prepares slice of two strings, URLs
+// with http and https protocols accordingly.
 func (h *HttpMixer) wthProtocols(url string) []string {
 	result := []string{}
 

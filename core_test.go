@@ -183,7 +183,7 @@ func TestSourceFromSlice(t *testing.T) {
 	mixer, err := NewHttpMixer(options)
 	assert.Nil(t, err)
 
-	mixer.sourceFromSlice(source)
+	mixer.setSource(source)
 
 	scanner := bufio.NewScanner(mixer.source)
 	for scanner.Scan() {

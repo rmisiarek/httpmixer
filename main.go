@@ -31,7 +31,7 @@ func main() {
 	// src := []string{
 	// 	"google.com", "golang.org",
 	// }
-	// mixer.sourceFromSlice(src)
+	// mixer.setSource(src)
 
 	printInfo(options)
 	mixer.Start()

@@ -6,33 +6,24 @@ import (
 	"time"
 )
 
-var fmtBase = "%s\t\t%s\t%s"
-var fmtFinal = "%-70s\t%s\n"
-var fmtSummary = "%s\t\t%s\t%s\n"
+var fmtBase = "==> %s\t[ %s, %s ]\n"
 
 func printResult(o *HttpMixerResult) {
 	status := strconv.Itoa(o.statusCode)
-	description := o.description
 
 	switch string(status[0]) {
 	case InformationalCategory:
-		p := fmt.Sprintf(fmtBase, Blue(o.method), Blue(status), Blue(description))
-		fmt.Printf(fmtFinal, p, White(o.url))
+		fmt.Printf(fmtBase, Blue(status), Blue(o.method), o.url)
 	case SuccessCategory:
-		p := fmt.Sprintf(fmtBase, Blue(o.method), Green(status), Green(description))
-		fmt.Printf(fmtFinal, p, White(o.url))
+		fmt.Printf(fmtBase, Green(status), Blue(o.method), o.url)
 	case RedirectionCategory:
-		p := fmt.Sprintf(fmtBase, Blue(o.method), Yellow(status), Yellow(description))
-		fmt.Printf(fmtFinal, p, White(o.url))
+		fmt.Printf(fmtBase, Yellow(status), Blue(o.method), o.url)
 	case ClientErrorCategory:
-		p := fmt.Sprintf(fmtBase, Blue(o.method), Purple(status), Purple(description))
-		fmt.Printf(fmtFinal, p, White(o.url))
+		fmt.Printf(fmtBase, Purple(status), Blue(o.method), o.url)
 	case ServerErrorCategory:
-		p := fmt.Sprintf(fmtBase, Blue(o.method), Red(status), Red(description))
-		fmt.Printf(fmtFinal, p, White(o.url))
+		fmt.Printf(fmtBase, Red(status), Blue(o.method), o.url)
 	default:
-		p := fmt.Sprintf(fmtBase, Blue(o.method), Gray(status), Gray(description))
-		fmt.Printf(fmtFinal, p, White(o.url))
+		fmt.Printf(fmtBase, Gray(status), Blue(o.method), o.url)
 	}
 }
 
@@ -44,7 +35,7 @@ func aggregateSummary(result *HttpMixerResult, showAll bool) {
 	label := ""
 	if showAll {
 		if result.description != "" {
-			label = fmt.Sprintf("%d\t%s", result.statusCode, result.description)
+			label = fmt.Sprintf("%d - %s", result.statusCode, result.description)
 		} else {
 			label = fmt.Sprintf("%d", result.statusCode)
 		}
@@ -53,33 +44,36 @@ func aggregateSummary(result *HttpMixerResult, showAll bool) {
 
 	if !showAll {
 		if result.description != "" {
-			label = fmt.Sprintf("%d\t%s", result.statusCode, result.description)
+			label = fmt.Sprintf("%d - %s", result.statusCode, result.description)
 			summaryData[result.method][label]++
 		}
 	}
 }
 
 func printSummary(summary Summary, took time.Duration) {
-	fmt.Printf(fmtSummary, "\nMETHOD", "FOUND", "RESPONSE STATUS")
-	fmt.Printf(fmtSummary, "======", "=====", "===============")
-	for method, statuses := range summary {
-		for status, counter := range statuses {
-			coloredStatus := White(status)
-			switch string(status[0]) {
-			case InformationalCategory:
-				coloredStatus = Blue(status)
-			case SuccessCategory:
-				coloredStatus = Green(status)
-			case RedirectionCategory:
-				coloredStatus = Yellow(status)
-			case ClientErrorCategory:
-				coloredStatus = Purple(status)
-			case ServerErrorCategory:
-				coloredStatus = Red(status)
+	if len(summary) == 0 {
+		fmt.Printf(">> %s %s\n", Blue("summary:"), White("found nothing :("))
+	} else {
+		fmt.Printf("\n>> %s\n\n", Blue("summary:"))
+		for method, statuses := range summary {
+			for status, counter := range statuses {
+				coloredStatus := White(status)
+				switch string(status[0]) {
+				case InformationalCategory:
+					coloredStatus = Blue(status)
+				case SuccessCategory:
+					coloredStatus = Green(status)
+				case RedirectionCategory:
+					coloredStatus = Yellow(status)
+				case ClientErrorCategory:
+					coloredStatus = Purple(status)
+				case ServerErrorCategory:
+					coloredStatus = Red(status)
+				}
+				fmt.Printf("==> found: %s of %s [ %s ] \n", Green(strconv.Itoa(counter)), coloredStatus, Blue(method))
 			}
-			fmt.Printf(fmtSummary, Blue(method), Green(strconv.Itoa(counter)), coloredStatus)
 		}
 	}
 
-	fmt.Printf("\n>> %s %s\n", Blue("Done within:"), Green(took.String()))
+	fmt.Printf("\n>> %s %s\n", Blue("done within:"), Green(took.String()))
 }

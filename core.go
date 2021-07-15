@@ -75,6 +75,10 @@ func NewHttpMixer(opts *HttpMixerOptions) (*HttpMixer, error) {
 		opts.statusFilter.showAll = false
 	}
 
+	if !opts.pipe {
+		printInfo(opts)
+	}
+
 	return &HttpMixer{
 		source:  source,
 		client:  getClient(&opts.noRedirect, &opts.timeout),

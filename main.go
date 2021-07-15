@@ -33,6 +33,5 @@ func main() {
 	// }
 	// mixer.setSource(src)
 
-	printInfo(options)
 	mixer.Start()
 }

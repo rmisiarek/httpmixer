@@ -124,7 +124,7 @@ func TestHttpMixerOptionsRepr(t *testing.T) {
 	assert.Equal(t, Blue("output: ")+Green("stdout"), o.reprOutput())
 	assert.Equal(t, Blue("concurrency: ")+Green(strconv.Itoa(2)), o.reprConcurenncy())
 	assert.Equal(t, Blue("timeout: ")+Green(strconv.Itoa(5)), o.reprTimeout())
-	assert.Equal(t, Blue("pipe: ")+Red("off"), o.reprPipe())
+	assert.Equal(t, Blue("pipe: ")+Green("on"), o.reprPipe())
 	assert.Equal(t, Blue("redirect: ")+Green("on"), o.reprRedirect())
 	assert.Equal(t, Blue("HTTP: ")+Green("on"), o.reprSkipHttp())
 	assert.Equal(t, Blue("HTTPS: ")+Green("on"), o.reprSkipHttps())
@@ -177,6 +177,7 @@ func TestSourceFromSlice(t *testing.T) {
 	source := []string{"source1", "source2"}
 
 	options := &HttpMixerOptions{
+		pipe:         true,
 		statusFilter: &statusFilter{},
 	}
 
@@ -236,38 +237,23 @@ func createTemporarySourceFile() *os.File {
 }
 
 func mixerOptions() HttpMixerOptions {
-	source := ""
-	output := ""
-	concurrency := 2
-	timeout := 5
-	redirect := false
-	skipHttp := false
-	skipHttps := false
-	testTrace := true
-	showAll := true
-	onlyInfo := false
-	onlySuccess := false
-	onlyClientErr := false
-	onlyServerErr := false
-
-	filter := statusFilter{
-		showAll:       showAll,
-		onlyInfo:      onlyInfo,
-		onlySuccess:   onlySuccess,
-		onlyClientErr: onlyClientErr,
-		onlyServerErr: onlyServerErr,
-	}
-
 	opts := HttpMixerOptions{
-		source:       source,
-		output:       output,
-		concurrency:  concurrency,
-		timeout:      timeout,
-		noRedirect:   redirect,
-		skipHttp:     skipHttp,
-		skipHttps:    skipHttps,
-		testTrace:    testTrace,
-		statusFilter: &filter,
+		source:      "",
+		output:      "",
+		concurrency: 2,
+		timeout:     5,
+		pipe:        true,
+		noRedirect:  false,
+		skipHttp:    false,
+		skipHttps:   false,
+		testTrace:   true,
+		statusFilter: &statusFilter{
+			showAll:       true,
+			onlyInfo:      false,
+			onlySuccess:   false,
+			onlyClientErr: false,
+			onlyServerErr: false,
+		},
 	}
 
 	return opts

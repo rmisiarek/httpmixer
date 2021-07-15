@@ -16,10 +16,6 @@ const title = `
 `
 
 func printInfo(o *HttpMixerOptions) {
-	if o.pipe {
-		return
-	}
-
 	fmt.Printf("%s\n", Blue(title))
 	fmt.Printf(">> %s\n", o.reprSource())
 	fmt.Printf(">> %s\n", o.reprOutput())

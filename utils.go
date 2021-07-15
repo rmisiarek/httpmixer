@@ -80,7 +80,7 @@ func createFile(filepath string, sleepSec int) *os.File {
 	exist := fileExists(filepath)
 	if exist {
 		log.Println(Red(fmt.Sprintf(
-			">> %s exists and will be overwritten. Are you sure? %d seconds to GO\n",
+			"%s exists and will be overwritten. Are you sure? %d seconds to GO\n",
 			filepath, sleepSec,
 		)))
 		time.Sleep(time.Duration(sleepSec) * time.Second)

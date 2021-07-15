@@ -210,7 +210,7 @@ func (h *HttpMixer) Start() {
 
 	if h.options.output != "" {
 		saveOutput = true
-		outputFile = createFile(h.options.output, 5)
+		outputFile = createFile(h.options.output, 7)
 		outputWriter = bufio.NewWriter(outputFile)
 	}
 
@@ -259,7 +259,10 @@ func (h *HttpMixer) Start() {
 			h.output(o)
 
 			if saveOutput {
-				_, err := outputWriter.WriteString(o.url + "\n")
+				_, err := outputWriter.WriteString(
+					fmt.Sprintf("%s,%d,%s\n", o.method, o.statusCode, o.url),
+				)
+
 				if err != nil {
 					log.Fatalf("error while writing to a file: %s", err.Error())
 				}

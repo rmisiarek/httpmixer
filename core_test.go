@@ -204,7 +204,7 @@ func TestCreateFile(t *testing.T) {
 	assert.Equal(t, "/tmp/results-file.txt", f.Name())
 
 	logExpected := Red(fmt.Sprintf(
-		">> %s exists and will be overwritten. Are you sure? %d seconds to GO\n",
+		"%s exists and will be overwritten. Are you sure? %d seconds to GO\n",
 		f.Name(), 0,
 	))
 

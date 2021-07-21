@@ -91,11 +91,11 @@ type Summary map[string]map[string]int
 
 var summaryData = make(Summary)
 
-func (o *HttpMixerOptions) reprSource() {
+func (o *HttpMixerOptions) reprSource() string {
 	if o.source == "" {
-		fmt.Println(">>", Blue("source:"), Green("stdin"))
+		return Blue("source: ") + Green("stdout")
 	}
-	fmt.Println(">>", Blue("source:"), Green(o.source))
+	return Blue("source: ") + Green("stdout")
 }
 
 func (o *HttpMixerOptions) reprOutput() string {

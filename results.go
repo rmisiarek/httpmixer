@@ -6,24 +6,25 @@ import (
 	"time"
 )
 
-var fmtBase = "==> %s\t[ %s, %s ]\n"
+const fmtBase = "%s %s\t[ %s, %s ]\n"
+const fmtSummary = "%s %s of %s [ %s ] \n"
 
 func printResult(o *HttpMixerResult) {
 	status := strconv.Itoa(o.statusCode)
 
 	switch string(status[0]) {
 	case InformationalCategory:
-		fmt.Printf(fmtBase, Blue(status), Blue(o.method), o.url)
+		fmt.Printf(fmtBase, WhiteBold("==>"), BlueBold(status), Blue(o.method), o.url)
 	case SuccessCategory:
-		fmt.Printf(fmtBase, Green(status), Blue(o.method), o.url)
+		fmt.Printf(fmtBase, WhiteBold("==>"), GreenBold(status), Blue(o.method), o.url)
 	case RedirectionCategory:
-		fmt.Printf(fmtBase, Yellow(status), Blue(o.method), o.url)
+		fmt.Printf(fmtBase, WhiteBold("==>"), Yellow(status), Blue(o.method), o.url)
 	case ClientErrorCategory:
-		fmt.Printf(fmtBase, Purple(status), Blue(o.method), o.url)
+		fmt.Printf(fmtBase, WhiteBold("==>"), MagentaBold(status), Blue(o.method), o.url)
 	case ServerErrorCategory:
-		fmt.Printf(fmtBase, Red(status), Blue(o.method), o.url)
+		fmt.Printf(fmtBase, WhiteBold("==>"), RedBold(status), Blue(o.method), o.url)
 	default:
-		fmt.Printf(fmtBase, Gray(status), Blue(o.method), o.url)
+		fmt.Printf(fmtBase, WhiteBold("==>"), WhiteBold(status), Blue(o.method), o.url)
 	}
 }
 
@@ -60,17 +61,17 @@ func printSummary(summary Summary, took time.Duration) {
 				coloredStatus := White(status)
 				switch string(status[0]) {
 				case InformationalCategory:
-					coloredStatus = Blue(status)
+					coloredStatus = BlueBold(status)
 				case SuccessCategory:
-					coloredStatus = Green(status)
+					coloredStatus = GreenBold(status)
 				case RedirectionCategory:
-					coloredStatus = Yellow(status)
+					coloredStatus = YellowBold(status)
 				case ClientErrorCategory:
-					coloredStatus = Purple(status)
+					coloredStatus = MagentaBold(status)
 				case ServerErrorCategory:
-					coloredStatus = Red(status)
+					coloredStatus = RedBold(status)
 				}
-				fmt.Printf("==> found: %s of %s [ %s ] \n", Green(strconv.Itoa(counter)), coloredStatus, Blue(method))
+				fmt.Printf(fmtSummary, WhiteBold("==>"), GreenBold(strconv.Itoa(counter)), coloredStatus, Blue(method))
 			}
 		}
 	}

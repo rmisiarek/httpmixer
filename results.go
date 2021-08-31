@@ -53,9 +53,9 @@ func aggregateSummary(result *HttpMixerResult, showAll bool) {
 
 func printSummary(summary Summary, took time.Duration) {
 	if len(summary) == 0 {
-		fmt.Printf(">> %s %s\n", Blue("summary:"), White("found nothing :("))
+		fmt.Printf("%s %s %s\n", WhiteBold("=>"), Blue("summary:"), White("found nothing :("))
 	} else {
-		fmt.Printf("\n>> %s\n\n", Blue("summary:"))
+		fmt.Printf("\n%s %s\n\n", WhiteBold("=>"), Blue("summary:"))
 		for method, statuses := range summary {
 			for status, counter := range statuses {
 				coloredStatus := White(status)
@@ -76,5 +76,5 @@ func printSummary(summary Summary, took time.Duration) {
 		}
 	}
 
-	fmt.Printf("\n>> %s %s\n", Blue("done within:"), Green(took.String()))
+	fmt.Printf("\n%s %s %s\n", WhiteBold("=>"), Blue("done within:"), Green(took.String()))
 }

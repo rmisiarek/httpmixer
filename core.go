@@ -75,15 +75,11 @@ func NewHttpMixer(opts *HttpMixerOptions) (*HttpMixer, error) {
 		opts.statusFilter.showAll = false
 	}
 
-	if !opts.pipe {
-		printInfo(opts)
-	}
-
 	return &HttpMixer{
 		source:  source,
-		client:  getClient(&opts.noRedirect, &opts.timeout),
 		options: opts,
-		output:  printResult,
+		output:  &output{outputFunction: printResult},
+		client:  getClient(&opts.noRedirect, &opts.timeout),
 	}, nil
 }
 
@@ -189,15 +185,35 @@ type HttpMixerResult struct {
 
 type resultsFunc func(result *HttpMixerResult)
 
+// Output represents way of processing HttpMixerResult outputs. By design outputs
+// are redirected to stdout and formatted by internal function. Formatting function
+// can be changed by changeOutputFunction method. Outputs can be redirected to channel
+// provided by user by setOutputChannel method (then toChannel is set to true).
+type output struct {
+	toChannel      bool
+	outputChannel  chan HttpMixerResult
+	outputFunction resultsFunc
+}
+
 type HttpMixer struct {
 	source  io.ReadCloser
 	client  *HttpClient
 	options *HttpMixerOptions
-	output  resultsFunc
+	output  *output
+}
+
+func (h *HttpMixer) setOutputChannel(out chan HttpMixerResult) {
+	h.options.pipe = true
+	h.output.toChannel = true
+	h.output.outputChannel = out
 }
 
 func (h *HttpMixer) Start() {
 	start := time.Now()
+
+	if !h.options.pipe {
+		printInfo(h.options)
+	}
 
 	outChannel := make(chan *HttpMixerResult)
 	feedChannel := make(chan *feedData)
@@ -220,7 +236,7 @@ func (h *HttpMixer) Start() {
 			for feed := range feedChannel {
 				result, err := h.client.request(&feed.url, feed.method)
 				if err != nil {
-					// fmt.Println(err.Error())
+					// fmt.Println(err.Error()) // debug
 					continue
 				}
 
@@ -238,7 +254,7 @@ func (h *HttpMixer) Start() {
 	}()
 
 	if h.options.pipe {
-		h.output = func(result *HttpMixerResult) {
+		h.output.outputFunction = func(result *HttpMixerResult) {
 			fmt.Println(result.url)
 		}
 	}
@@ -256,7 +272,13 @@ func (h *HttpMixer) Start() {
 				}
 			}
 
-			h.output(o)
+			if h.output.toChannel {
+				// can be set by setOutputChannel()
+				h.output.outputChannel <- *o
+			} else {
+				// can be changed by changeOutputFunction()
+				h.output.outputFunction(o)
+			}
 
 			if saveOutput {
 				_, err := outputWriter.WriteString(
@@ -319,10 +341,10 @@ func (h *HttpMixer) setSource(s []string) {
 	h.source = ioutil.NopCloser(strings.NewReader(strings.Join(s, "\n")))
 }
 
-// setOutputFunc sets custom function (f) which will be responsible
+// changeOutputFunction sets custom function (f) which will be responsible
 // for handling results included in HttpMixerResult.
-func (h *HttpMixer) setOutputFunc(f resultsFunc) {
-	h.output = f
+func (h *HttpMixer) changeOutputFunction(f resultsFunc) {
+	h.output.outputFunction = f
 }
 
 // wthProtocols prepares slice of two strings, URLs

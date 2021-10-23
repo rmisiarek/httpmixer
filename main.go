@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 )
 
@@ -29,17 +28,8 @@ func main() {
 		log.Fatalln(Red(err.Error()))
 	}
 
-	out := make(chan HttpMixerResult)
-	mixer.setOutputChannel(out)
-
-	go func() {
-		for o := range out {
-			fmt.Println(o)
-		}
-	}()
-
 	mixer.Start()
-	close(out)
+	// close(out)
 }
 
 // src := []string{

@@ -186,28 +186,12 @@ type HttpMixerResult struct {
 
 type resultsFunc func(result *HttpMixerResult)
 
-// Output represents way of processing HttpMixerResult outputs. By design outputs
-// are redirected to stdout and formatted by internal function. Formatting function
-// can be changed by changeOutputFunction method.
-// type output struct {
-// 	// toChannel      bool
-// 	// outputChannel  chan HttpMixerResult
-// 	outputFunction resultsFunc
-// }
-
 type HttpMixer struct {
 	source  io.ReadCloser
+	output  resultsFunc
 	client  *HttpClient
 	options *HttpMixerOptions
-	// output  *output
-	output resultsFunc
 }
-
-// func (h *HttpMixer) setOutputChannel(out chan HttpMixerResult) {
-// 	h.options.pipe = true
-// 	h.output.toChannel = true
-// 	h.output.outputChannel = out
-// }
 
 func (h *HttpMixer) Start() {
 	start := time.Now()
@@ -273,14 +257,6 @@ func (h *HttpMixer) Start() {
 				}
 			}
 
-			// if h.output.toChannel {
-			// 	// can be set by setOutputChannel()
-			// 	h.output.outputChannel <- *o
-			// } else {
-			// 	// can be changed by changeOutputFunction()
-			// 	h.output.outputFunction(o)
-			// }
-
 			h.output(o)
 
 			if saveOutput {
@@ -343,12 +319,6 @@ func (h *HttpMixer) setSource(s []string) {
 	h.source.Close()
 	h.source = ioutil.NopCloser(strings.NewReader(strings.Join(s, "\n")))
 }
-
-// changeOutputFunction sets custom function (f) which will be responsible
-// for handling results included in HttpMixerResult.
-// func (h *HttpMixer) changeOutputFunction(f resultsFunc) {
-// 	h.output.outputFunction = f
-// }
 
 // wthProtocols prepares slice of two strings, URLs
 // with http and https protocols accordingly.

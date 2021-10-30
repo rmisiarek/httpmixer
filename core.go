@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"strconv"
 	"strings"
@@ -79,8 +78,7 @@ func NewHttpMixer(opts *HttpMixerOptions) (*HttpMixer, error) {
 		source:  source,
 		options: opts,
 		output:  printResult,
-		// output:  &output{outputFunction: printResult},
-		client: getClient(&opts.noRedirect, &opts.timeout),
+		client:  getClient(&opts.noRedirect, &opts.timeout),
 	}, nil
 }
 
@@ -217,8 +215,9 @@ func (h *HttpMixer) Start() {
 
 	for i := 0; i < h.options.concurrency; i++ {
 		feedWG.Add(1)
-		go func() {
+		go func(i int) {
 			for feed := range feedChannel {
+				fmt.Println(i)
 				result, err := h.client.request(&feed.url, feed.method)
 				if err != nil {
 					// fmt.Println(err.Error()) // debug
@@ -230,7 +229,7 @@ func (h *HttpMixer) Start() {
 			}
 
 			feedWG.Done()
-		}()
+		}(i)
 	}
 
 	go func() {
@@ -311,13 +310,6 @@ func (h *HttpMixer) feed(feedChannel chan *feedData) {
 			}
 		}
 	}
-}
-
-// setSource sets slice of strings (s) as source. The previous
-// source will be closed.
-func (h *HttpMixer) setSource(s []string) {
-	h.source.Close()
-	h.source = ioutil.NopCloser(strings.NewReader(strings.Join(s, "\n")))
 }
 
 // wthProtocols prepares slice of two strings, URLs

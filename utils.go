@@ -22,15 +22,6 @@ func intSliceContains(s []int, v int) bool {
 	return false
 }
 
-func stringSliceContains(s []string, v string) bool {
-	for _, a := range s {
-		if a == v {
-			return true
-		}
-	}
-	return false
-}
-
 func intArrayToString(a []int) string {
 	b := make([]string, len(a))
 	for i, v := range a {

@@ -29,10 +29,4 @@ func main() {
 	}
 
 	mixer.Start()
-	// close(out)
 }
-
-// src := []string{
-// 	"google.com", "golang.org",
-// }
-// mixer.setSource(src)

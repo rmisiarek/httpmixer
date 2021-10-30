@@ -173,25 +173,6 @@ func TestOpenStdinOrFile(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-func TestSourceFromSlice(t *testing.T) {
-	source := []string{"source1", "source2"}
-
-	options := &HttpMixerOptions{
-		pipe:         true,
-		statusFilter: &statusFilter{},
-	}
-
-	mixer, err := NewHttpMixer(options)
-	assert.Nil(t, err)
-
-	mixer.setSource(source)
-
-	scanner := bufio.NewScanner(mixer.source)
-	for scanner.Scan() {
-		assert.Equal(t, true, stringSliceContains(source, scanner.Text()))
-	}
-}
-
 func TestCreateFile(t *testing.T) {
 	// Catch loggers output
 	var buf bytes.Buffer
